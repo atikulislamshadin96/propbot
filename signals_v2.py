@@ -79,16 +79,16 @@ def evaluate(row, extra):
         prior_high = _f(row.get("prior_high"))
         rsi_val = _f(row.get("rsi"), 50)
         if prior_low > 0 and (px - prior_low) <= 0.3 * atr_val and rsi_val < 45:
-            score += 15; s_zone += 15
+            score += 20; s_zone += 20
             direction = "BUY"; tags["zone"] = "level_bounce"
         elif prior_high > 0 and (prior_high - px) <= 0.3 * atr_val and rsi_val > 55:
-            score += 15; s_zone += 15
+            score += 20; s_zone += 20
             direction = "SELL"; tags["zone"] = "level_bounce"
     elif regime == "TREND_UP" and px > _f(row.get("prior_high")):
-        score += 20; s_zone += 20
+        score += 25; s_zone += 25
         direction = "BUY"; tags["zone"] = "breakout"
     elif regime == "TREND_DOWN" and px < _f(row.get("prior_low")):
-        score += 20; s_zone += 20
+        score += 25; s_zone += 25
         direction = "SELL"; tags["zone"] = "breakout"
 
     if direction is None:
