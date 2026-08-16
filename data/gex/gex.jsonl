@@ -1,1 +1,2 @@
 {"ts": "2026-08-16T17:25:26.162059+00:00", "spot": 63141.1, "n_instruments": 680, "net_market_gex_usd_1pct": 296284990.0, "dealer_gex_neg": true, "zero_gamma_flip": null, "nearest_wall_strike": 70000.0, "wall_dist_pct": 10.86, "wall_above": true}
+{"ts": "2026-08-16T17:30:13.626921+00:00", "spot": 63126.0, "n_instruments": 680, "net_market_gex_usd_1pct": 295823718.0, "dealer_gex_neg": true, "zero_gamma_flip": null, "nearest_wall_strike": 70000.0, "wall_dist_pct": 10.89, "wall_above": true}
