@@ -1,5 +1,4 @@
 import pandas as pd
-from binance_data import funding_history as bn_hist
 from bybit_data import bybit_funding_history
 from okx_data import okx_funding_history
 
@@ -11,16 +10,14 @@ def _to_series(rows):
     return df.set_index("dt")["rate"].resample("1h").last().ffill()
 
 def funding_divergence_series(symbol="BTCUSDT"):
-    """Track 4: hourly div = bn - mean(by, ok) + 7-day rolling z"""
+    """Track 4: div = bybit - okx (Binance blocked from US runners)"""
     try:
-        bn = _to_series(bn_hist(symbol, 200))
         by = _to_series(bybit_funding_history(symbol, 200))
         ok = _to_series(okx_funding_history())
-        if bn is None or by is None or ok is None:
+        if by is None or ok is None:
             return None
-        s = pd.concat([bn.rename("bn"), by.rename("by"), ok.rename("ok")],
-                      axis=1).dropna()
-        s["div"] = s["bn"] - (s["by"] + s["ok"]) / 2.0
+        s = pd.concat([by.rename("by"), ok.rename("ok")], axis=1).dropna()
+        s["div"] = s["by"] - s["ok"]
         w = s["div"].rolling(24 * 7, min_periods=24 * 3)
         s["div_z"] = (s["div"] - w.mean()) / (w.std() + 1e-9)
         return s
