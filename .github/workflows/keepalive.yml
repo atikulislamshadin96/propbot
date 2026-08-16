@@ -1,1 +1,21 @@
+name: keepalive
+on:
+  schedule:
+    # Every 5 days — prevents GitHub's 60-day no-commit disable
+    - cron: '0 0 */5 * *'
+  workflow_dispatch:
 
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          echo "keepalive $(date -u +%Y-%m-%d)" > keepalive.txt
+          git config user.name "propbot[bot]"
+          git config user.email "propbot@users.noreply.github.com"
+          git add keepalive.txt
+          git commit -m "keepalive" || echo "no changes"
+          git push || echo "push failed"
