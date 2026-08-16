@@ -1,1 +1,30 @@
+name: weekly-backtest
+on:
+  schedule:
+    - cron: '0 12 * * 0'   # Sunday 12:00 UTC
+  workflow_dispatch:
 
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python backtest_v2.py --days 60
+      - run: python purged_validation.py --days 60
+      - run: python daily_report_v2.py
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+      - name: Commit reports
+        run: |
+          git config user.name "propbot[bot]"
+          git config user.email "propbot@users.noreply.github.com"
+          git add -A reports
+          git diff --cached --quiet || git commit -m "backtest $(date -u +%F)"
+          git push || echo "push failed"
