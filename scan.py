@@ -1,5 +1,6 @@
 # ============================================================
 # scan.py — Main orchestrator, runs every 15 min via cron
+# FIXED: Uses non-geo-blocked data sources (Binance vision + Bybit)
 # ============================================================
 import os
 import requests
@@ -7,7 +8,8 @@ import pandas as pd
 from datetime import datetime, timezone
 
 import config_v2 as cfg
-from binance_data import klines, funding_current, open_interest
+from binance_data import klines
+from bybit_data import bybit_funding_current, bybit_open_interest_history
 from datahub import funding_divergence_current
 from features import compute_features
 from signals_v2 import evaluate
@@ -17,6 +19,9 @@ SYMBOL = cfg.SYMBOL
 INTERVAL = cfg.INTERVAL
 
 
+# ────────────────────────────────────────────────────────────
+# Helpers
+# ────────────────────────────────────────────────────────────
 def send_telegram(msg):
     """Send message to Telegram (silent failure if not configured)"""
     if not (cfg.TG_TOKEN and cfg.TG_CHAT_ID):
@@ -31,7 +36,7 @@ def send_telegram(msg):
 
 
 def heartbeat():
-    """Update keepalive.txt so GitHub doesn't disable the cron"""
+    """Update keepalive.txt so GitHub doesn't disable the cron (60-day rule)"""
     try:
         with open("keepalive.txt", "w") as f:
             f.write(f"last_scan: {datetime.now(timezone.utc).isoformat()}\n")
@@ -39,36 +44,60 @@ def heartbeat():
         pass
 
 
+def collect_gex():
+    """Passive GEX collection (Track 3, gated). Never blocks the scan."""
+    try:
+        import gex_collector
+        snap = gex_collector.snapshot()
+        if snap:
+            print(f"[GEX] dealer_neg={snap['dealer_gex_neg']} "
+                  f"wall={snap['nearest_wall_strike']} ({snap['wall_dist_pct']}%)")
+    except Exception as e:
+        print(f"[GEX] skip: {e}")
+
+
+# ────────────────────────────────────────────────────────────
+# Main scan
+# ────────────────────────────────────────────────────────────
 def main():
-    print(f"[{datetime.now(timezone.utc).isoformat()}] scan start | {SYMBOL} {INTERVAL}")
+    print(f"[{datetime.now(timezone.utc).isoformat()}] scan start | "
+          f"{SYMBOL} {INTERVAL} | program={cfg.ACTIVE_PROGRAM}")
     heartbeat()
 
-    # ── 1. Fetch data ────────────────────────────────────────
+    # ── 1. Fetch klines (non-geo-blocked source) ─────────────
     try:
         rows = klines(SYMBOL, INTERVAL, 500)
     except Exception as e:
         print(f"[ERROR] klines failed: {e}")
         return
+    if not rows or len(rows) < 100:
+        print("[ERROR] insufficient klines")
+        return
+
     df = pd.DataFrame(rows).sort_values("ts").reset_index(drop=True)
     df = compute_features(df)
 
-    # ── 2. Funding + OI + divergence ─────────────────────────
+    # ── 2. Funding + OI + divergence (Bybit/OKX, not blocked) ─
     try:
-        fund = funding_current(SYMBOL)
+        fund = bybit_funding_current(SYMBOL)
     except Exception:
         fund = 0.0
+
     try:
-        oi_now = open_interest(SYMBOL)
+        oi = bybit_open_interest_history(SYMBOL, 9)
+        oi_chg = (oi[0]["oi"] - oi[-1]["oi"]) / oi[-1]["oi"] if len(oi) >= 2 else 0.0
     except Exception:
-        oi_now = 0.0
-    # 24-bar OI change (approx)
-    oi_chg = 0.0  # placeholder — live OI snapshot only for now
+        oi_chg = 0.0
+
     try:
         fdiv, fdivz = funding_divergence_current(SYMBOL)
     except Exception:
         fdiv, fdivz = 0.0, 0.0
 
-    # ── 3. Check SL/TP on last completed candle ──────────────
+    # ── 3. Passive GEX collection (never blocks) ─────────────
+    collect_gex()
+
+    # ── 4. Check SL/TP on last COMPLETED candle ──────────────
     if len(df) >= 2:
         last_done = df.iloc[-2]
         closed = db.check_and_close(
@@ -85,13 +114,13 @@ def main():
             print(f"[CLOSE] #{t['id']} {t['status'].upper()} "
                   f"pnl={t['pnl_pct']:+.2f}%")
 
-    # ── 4. Pre-signal gates ──────────────────────────────────
-    # Gate A: MAX_POSITIONS
+    # ── 5. Pre-signal risk gates (Track 0) ───────────────────
+    # Gate A: max concurrent positions
     if len(db.open_trades()) >= cfg.MAX_POSITIONS:
         print(f"[SKIP] max open positions ({cfg.MAX_POSITIONS}) reached")
         return
 
-    # Gate B: Daily loss circuit breaker (Track 0)
+    # Gate B: daily loss circuit breaker (80% of daily limit)
     daily_pnl = db.daily_pnl_pct()
     daily_limit = cfg.P["daily_loss_pct"]
     if daily_pnl < 0 and abs(daily_pnl) >= daily_limit * 0.8:
@@ -99,12 +128,12 @@ def main():
               f"({daily_limit}%) — circuit breaker")
         return
 
-    # Gate C: 30-min cooldown after last trade
+    # Gate C: 30-min cooldown after last closed trade
     if not db.check_cooldown(30):
         print("[SKIP] 30-min cooldown active")
         return
 
-    # ── 5. Generate signal on last completed candle ──────────
+    # ── 6. Generate signal on last COMPLETED candle ──────────
     row = df.iloc[-2].to_dict()
     extra = {
         "funding": fund,
@@ -117,10 +146,10 @@ def main():
 
     if sig is None:
         print(f"[IDLE] no signal | score < {cfg.MIN_SCORE} | "
-              f"fund={fund:+.5f} div={fdiv:+.5f}")
+              f"fund={fund:+.5f} oi_chg={oi_chg:+.3f} div={fdiv:+.5f} z={fdivz:+.2f}")
         return
 
-    # ── 6. Open trade + log + notify ─────────────────────────
+    # ── 7. Open paper trade + log + notify ───────────────────
     db.log_signal(sig)
     trade_id = db.open_trade(sig, cfg.MAX_RISK_PCT)
 
@@ -128,12 +157,11 @@ def main():
            f"Score: {sig['score']} | Regime: {sig['regime']}\n"
            f"Entry: ${sig['entry']:.2f}\n"
            f"SL: ${sig['sl']:.2f} | TP: ${sig['tp']:.2f}\n"
-           f"Zone: {sig.get('zone','—')} | Div: {sig.get('div','—')}")
+           f"Zone: {sig.get('zone', '—')} | Div: {sig.get('div', '—')}")
     send_telegram(msg)
 
     print(f"[SIGNAL] #{trade_id} {sig['side']} @ {sig['entry']:.2f} "
-          f"score={sig['score']} | {sig['regime']} | "
-          f"zone={sig.get('zone','—')}")
+          f"score={sig['score']} | {sig['regime']} | zone={sig.get('zone', '—')}")
 
 
 if __name__ == "__main__":
