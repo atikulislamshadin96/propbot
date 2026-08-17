@@ -107,6 +107,13 @@ def evaluate(row, extra):
     elif direction == "SELL" and taker_ratio < 0.40:
         score += 5; s_flow += 5
 
+    # ── OPTION A: L2 Confirmation Gate (required for all entries) ──
+    # Data shows: flow=0 trades → 33.8% WR, -0.080% avg, net -5.41%
+    #            flow>0 trades → 35.9% WR, +0.046% avg, net +4.26%
+    # Reject any entry without flow confirmation (s_flow >= 5)
+    if s_flow < 5:
+        return None
+
     # ── Layer 3: Crowding (max ~20 pts) ───────────────────────
     funding = _f(extra.get("funding"))
     oi_chg = _f(extra.get("oi_chg"))
@@ -146,6 +153,13 @@ def evaluate(row, extra):
         tags["session"] = "good"
     else:
         tags["session"] = "off"
+
+    # ── OPTION G: sup_sweep BUY in session = poison bucket (suppress) ──
+    # Data shows: sup_sweep BUY + 8-16 UTC → n=58, WR=25.9%, net=-10.88%
+    # This is the single largest loss bucket — suppress entirely
+    if (tags.get("zone") == "sup_sweep" and direction == "BUY" 
+        and 8 <= hour_utc <= 16):
+        return None
 
     # Counter-trend penalty (sweep against trend = lower prob)
     if tags.get("zone") == "sup_sweep" and regime == "TREND_DOWN":
