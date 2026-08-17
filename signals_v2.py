@@ -15,8 +15,12 @@ def _f(x, default=0.0):
 
 def evaluate(row, extra, is_backtest=False):
     """
-    SURGICAL TEST: শুধু res_sweep SELL in session
-    বাকি সব setup বাদ — data-driven profitable bucket
+    Evaluate a completed candle row + extra signals.
+    Returns signal dict or None.
+    
+    🔑 PATCH B: hl_funding_z >= 2.0 is now REQUIRED confirmation,
+    not just filler. Without it, res_sweep alone (30+10=40) would
+    pass MIN_SCORE_BACKTEST=25 silently.
     """
     score = 0
     s_gate = 0
@@ -54,12 +58,10 @@ def evaluate(row, extra, is_backtest=False):
     prior_high = _f(row.get("prior_high"))
     direction = None
 
-    # 🔑 SURGICAL: শুধু res_sweep detect করি, SELL direction
     if _f(row.get("sweep_res")) and regime != "TREND_DOWN":
         score += 30; s_zone += 30
         direction = "SELL"; tags["zone"] = "res_sweep"
 
-    # ❌ অন্য সব setup disable (breakout, sup_sweep, level_bounce)
     if direction is None:
         return None
 
@@ -74,38 +76,42 @@ def evaluate(row, extra, is_backtest=False):
     if direction == "SELL" and taker_ratio < 0.40:
         score += 5; s_flow += 5
 
-    # ── Layer 3: Crowding ─────────────────────────────────────
+    # ── Layer 3: Crowding (HL funding z = REQUIRED confirmation) ──
     funding = _f(extra.get("funding"))
     oi_chg = _f(extra.get("oi_chg"))
     fdiv = _f(extra.get("funding_div"))
     fdivz = _f(extra.get("funding_div_z"))
+    hl_funding_z = _f(extra.get("hl_funding_z"))
 
-    if direction == "SELL" and funding > 0.0005:
+    # 🔑 PATCH B: HL funding z >= 2.0 = CONFIRMATION (not filler)
+    # This is the gate that prevents silent pass-through
+    if direction == "SELL" and hl_funding_z >= 2.0:
         score += 15; s_crowd += 15
-        tags["fund_extreme"] = True
-    elif direction == "SELL" and funding > 0:
+        tags["hl_funding_z_confirm"] = True
+    elif direction == "SELL" and funding > 0.0005:
         score += 8; s_crowd += 8
 
+    # OI squeeze
     if abs(oi_chg) > 0.03 and funding > 0:
         score += 5; s_crowd += 5
         tags["oi_squeeze"] = True
 
+    # Funding divergence
     if abs(fdiv) > cfg.DIV_THRESH and abs(fdivz) > cfg.DIV_Z_THRESH:
-        if fdiv < 0:  # SELL aligned divergence
+        if fdiv < 0:
             score += cfg.DIV_BOOST; s_crowd += cfg.DIV_BOOST
             tags["funding_div"] = True
 
     # ── Layer 4: Session (required for res_sweep) ─────────────
     hour_utc = extra.get("hour_utc", 12)
 
-    # 🔑 SURGICAL: res_sweep only in session (08-16 UTC)
     if not (8 <= hour_utc <= 16):
-        return None  # Off-session res_sweep বাদ
-    
+        return None
+
     score += 10; s_gate += 10
     tags["session"] = "good"
 
-    # TREND_UP-এ res_sweep counter-trend, penalty
+    # TREND_UP counter-trend penalty
     if regime == "TREND_UP":
         score -= 10; s_gate -= 10
         tags["counter_trend"] = True
