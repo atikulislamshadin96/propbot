@@ -3,9 +3,13 @@ from utils import _f
 
 
 def _flow_score(row, direction):
+    """Layer 2: Single composite flow score (max 15 points)
+    CVD divergence + Taker ratio — VPIN-proxy dropped (mislabeled noise)
+    """
     flow_points = 0.0
     tags = {}
 
+    # ── CVD Divergence (0-10 points) ─────────────────────────
     px_12 = _f(row.get("px_12"))
     cvd_12 = _f(row.get("cvd_12"))
     if px_12 > 0:
@@ -18,6 +22,7 @@ def _flow_score(row, direction):
             flow_points += 10.0
             tags["flow_cvd_div"] = "bear"
 
+    # ── Taker Ratio Alignment (0-5 points) ───────────────────
     taker = _f(row.get("taker"), 0.5)
     if direction == "BUY":
         if taker > 0.60:
@@ -38,6 +43,7 @@ def _flow_score(row, direction):
 
 
 def evaluate(row, extra):
+    """Generate signal score. Returns dict or None if below MIN_SCORE."""
     score = 0.0
     direction = None
     tags = {}
@@ -49,6 +55,7 @@ def evaluate(row, extra):
     if atr_val <= 0 or px <= 0:
         return None
 
+    # ── LAYER 1: Market Map (max 30 pts) ─────────────────────
     if regime != "TREND_UP" and row.get("sweep_sup"):
         score += 30; s_zone += 30
         direction = "BUY"; tags["zone"] = "sup_sweep"
@@ -75,11 +82,13 @@ def evaluate(row, extra):
     if direction is None:
         return None
 
+    # ── LAYER 2: Flow (max 15 pts) ───────────────────────────
     flow_pts, flow_tags = _flow_score(row, direction)
     score += flow_pts
     s_flow += flow_pts
     tags.update(flow_tags)
 
+    # ── LAYER 3: Crowding (max 43 pts) ───────────────────────
     fund = _f(extra.get("funding"))
     oi_chg = _f(extra.get("oi_chg"))
 
@@ -110,8 +119,10 @@ def evaluate(row, extra):
         s_crowd += cfg.DIV_BOOST
         tags["div"] = "bn_crowded_short"
 
+    # ── LAYER 4: Regime / Session / Gate ─────────────────────
     hour = extra.get("hour_utc", 12)
 
+    # FIX #4: Counter-trend sweep gets reduced penalty (-10 instead of -25)
     if direction == "BUY" and regime == "TREND_DOWN":
         penalty = -10 if tags.get("zone", "").endswith("sweep") else -25
         score += penalty; s_gate += penalty
@@ -119,13 +130,14 @@ def evaluate(row, extra):
         penalty = -10 if tags.get("zone", "").endswith("sweep") else -25
         score += penalty; s_gate += penalty
 
+    # ✅ FIXED: Session bonus only — no penalty (to avoid over-constraining)
     if 8 <= hour <= 16:
         score += 10; s_gate += 10
         tags["session"] = "good"
     else:
-        score -= 10; s_gate -= 10
-        tags["session"] = "bad"
+        tags["session"] = "off"   # neutral, no penalty
 
+    # High volatility gate
     rv_pct = _f(row.get("rv_pct"), 0.5)
     if rv_pct > 0.9:
         score -= 10; s_gate -= 10
@@ -138,9 +150,11 @@ def evaluate(row, extra):
     if rv < cfg.VOL_BAND_LOW or rv > cfg.VOL_BAND_HIGH:
         return None
 
+    # ── Final MIN_SCORE gate ─────────────────────────────────
     if score < cfg.MIN_SCORE:
         return None
 
+    # SL/TP calculation
     if direction == "BUY":
         sl, tp = px - cfg.SL_ATR * atr_val, px + cfg.SL_ATR * atr_val * cfg.TP_RR
     else:
