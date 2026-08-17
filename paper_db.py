@@ -1,6 +1,3 @@
-# ============================================================
-# paper_db.py — JSONL trade database with risk management
-# ============================================================
 import json
 import os
 import time
@@ -18,8 +15,15 @@ def _now():
 def _read(path):
     if not os.path.exists(path):
         return []
+    out = []
     with open(path, encoding="utf-8") as f:
-        return [json.loads(l) for l in f if l.strip()]
+        for line in f:
+            if line.strip():
+                try:
+                    out.append(json.loads(line))
+                except Exception:
+                    continue
+    return out
 
 
 def _append(path, obj):
@@ -33,7 +37,6 @@ def log_signal(sig):
 
 
 def open_trade(sig, risk_pct):
-    """Open a paper trade with idempotent timestamp-based ID"""
     t = {
         "id": int(time.time() * 1000),
         "ts": _now(),
@@ -57,7 +60,6 @@ def open_trades():
 
 
 def trades_today(max_positions=2):
-    """Today's closed trades (UTC day)"""
     now = datetime.now(timezone.utc).date()
     closed = [t for t in _read(TRADES)
               if t.get("status") in ("tp", "sl")
@@ -74,12 +76,10 @@ def trades_today(max_positions=2):
 
 
 def daily_pnl_pct():
-    """Sum of today's closed trade P&L %"""
     return sum(t.get("pnl_pct", 0.0) for t in trades_today())
 
 
 def last_trade_time():
-    """ISO timestamp of the last closed trade (for cooldown)"""
     closed = [t for t in _read(TRADES)
               if t.get("status") in ("tp", "sl") and t.get("closed_ts")]
     if not closed:
@@ -89,7 +89,6 @@ def last_trade_time():
 
 
 def check_cooldown(cooldown_min=30):
-    """True if enough time passed since last trade"""
     last = last_trade_time()
     if last is None:
         return True
@@ -101,8 +100,6 @@ def check_cooldown(cooldown_min=30):
 
 
 def check_and_close(candle_high, candle_low, fee_pct=0.05):
-    """Check SL/TP for open trades using candle high/low.
-    Conservative: if both SL and TP touched in same candle → SL wins."""
     changed = []
     trades = _read(TRADES)
     for t in trades:
@@ -115,7 +112,7 @@ def check_and_close(candle_high, candle_low, fee_pct=0.05):
                 exit_px, res = t["tp"], "tp"
             else:
                 continue
-        else:  # SELL
+        else:
             if candle_high >= t["sl"]:
                 exit_px, res = t["sl"], "sl"
             elif candle_low <= t["tp"]:
@@ -132,8 +129,6 @@ def check_and_close(candle_high, candle_low, fee_pct=0.05):
         changed.append(t)
 
     if changed:
-        # Rewrite full file with updated statuses
-        os.makedirs(DATA, exist_ok=True)
         with open(TRADES, "w", encoding="utf-8") as f:
             for r in trades:
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
@@ -141,7 +136,6 @@ def check_and_close(candle_high, candle_low, fee_pct=0.05):
 
 
 def daily_report_summary():
-    """Quick summary for Telegram"""
     closed = [t for t in _read(TRADES) if t.get("status") in ("tp", "sl")]
     today = trades_today()
     n_all = len(closed)
