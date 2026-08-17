@@ -3,26 +3,20 @@ import config_v2 as cfg
 
 
 def _f(x, default=0.0):
-    """Safe float extractor — returns default on None/NaN."""
+    """Safe float extractor."""
     if x is None:
         return default
     try:
         v = float(x)
-        return v if v == v else default  # NaN check
+        return v if v == v else default
     except Exception:
         return default
 
 
 def evaluate(row, extra, is_backtest=False):
     """
-    Evaluate a completed candle row + extra signals.
-    Returns signal dict or None.
-    
-    4-Layer Scoring:
-      Layer 1 (Market Map): sweep/breakout/bounce  — max 30 pts
-      Layer 2 (Flow): CVD divergence + taker       — max 15 pts
-      Layer 3 (Crowding): funding + OI + div       — max ~20 pts
-      Layer 4 (Regime/Session): regime + session   — ±10 pts
+    SURGICAL TEST: শুধু res_sweep SELL in session
+    বাকি সব setup বাদ — data-driven profitable bucket
     """
     score = 0
     s_gate = 0
@@ -55,145 +49,87 @@ def evaluate(row, extra, is_backtest=False):
         regime = "RANGE"
     tags["regime"] = regime
 
-    # ── Layer 1: Market Map (max 30 pts) ──────────────────────
+    # ── Layer 1: ONLY res_sweep (SELL direction) ──────────────
     prior_low = _f(row.get("prior_low"))
     prior_high = _f(row.get("prior_high"))
     direction = None
 
-    # Sweep (liquidity grab with rejection)
-    if _f(row.get("sweep_sup")) and regime != "TREND_UP":
-        score += 30; s_zone += 30
-        direction = "BUY"; tags["zone"] = "sup_sweep"
-    elif _f(row.get("sweep_res")) and regime != "TREND_DOWN":
+    # 🔑 SURGICAL: শুধু res_sweep detect করি, SELL direction
+    if _f(row.get("sweep_res")) and regime != "TREND_DOWN":
         score += 30; s_zone += 30
         direction = "SELL"; tags["zone"] = "res_sweep"
 
-    # Breakout (trend continuation)
-    if direction is None:
-        if regime == "TREND_UP" and px > prior_high > 0:
-            score += 25; s_zone += 25
-            direction = "BUY"; tags["zone"] = "breakout"
-        elif regime == "TREND_DOWN" and px < prior_low > 0:
-            score += 25; s_zone += 25
-            direction = "SELL"; tags["zone"] = "breakout"
-
-    # Level bounce (RANGE only)
-    if direction is None and regime == "RANGE":
-        if prior_low > 0 and (px - prior_low) <= 0.3 * atr_val and rsi_val < 45:
-            score += 10; s_zone += 10
-            direction = "BUY"; tags["zone"] = "level_bounce"
-        elif prior_high > 0 and (prior_high - px) <= 0.3 * atr_val and rsi_val > 55:
-            score += 10; s_zone += 10
-            direction = "SELL"; tags["zone"] = "level_bounce"
-
+    # ❌ অন্য সব setup disable (breakout, sup_sweep, level_bounce)
     if direction is None:
         return None
 
-    # ── Layer 2: Flow (max 15 pts) ────────────────────────────
+    # ── Layer 2: Flow ─────────────────────────────────────────
     cvd_div = _f(row.get("cvd_div"))
     taker_ratio = _f(row.get("taker_ratio"), 0.5)
 
-    # CVD divergence
-    if direction == "BUY" and cvd_div > 0.3:
-        score += 10; s_flow += 10
-        tags["cvd_div"] = True
-    elif direction == "SELL" and cvd_div < -0.3:
+    if direction == "SELL" and cvd_div < -0.3:
         score += 10; s_flow += 10
         tags["cvd_div"] = True
 
-    # Taker ratio alignment
-    if direction == "BUY" and taker_ratio > 0.60:
-        score += 5; s_flow += 5
-    elif direction == "SELL" and taker_ratio < 0.40:
+    if direction == "SELL" and taker_ratio < 0.40:
         score += 5; s_flow += 5
 
-    # ── OPTION A: SOFT GATE (penalize in backtest, reject in live) ──
-    # Live: Bybit/Binance data available → s_flow meaningful → hard gate
-    # Backtest: US-blocked → s_flow often 0 → soft gate (penalize, don't reject)
-    if cfg.OPTION_A_SOFT and is_backtest and s_flow < 5:
-        score -= 10; s_gate -= 10
-        tags["l2_missing"] = True
-    elif not is_backtest and s_flow < 5:
-        return None  # Live mode: hard reject
-
-    # ── Layer 3: Crowding (max ~20 pts) ───────────────────────
+    # ── Layer 3: Crowding ─────────────────────────────────────
     funding = _f(extra.get("funding"))
     oi_chg = _f(extra.get("oi_chg"))
     fdiv = _f(extra.get("funding_div"))
     fdivz = _f(extra.get("funding_div_z"))
 
-    # Funding alignment
-    if direction == "BUY" and funding < -0.0005:
+    if direction == "SELL" and funding > 0.0005:
         score += 15; s_crowd += 15
         tags["fund_extreme"] = True
-    elif direction == "SELL" and funding > 0.0005:
-        score += 15; s_crowd += 15
-        tags["fund_extreme"] = True
-    elif direction == "BUY" and funding < 0:
-        score += 8; s_crowd += 8
     elif direction == "SELL" and funding > 0:
         score += 8; s_crowd += 8
 
-    # OI squeeze
-    if abs(oi_chg) > 0.03:
-        if (direction == "BUY" and funding < 0) or (direction == "SELL" and funding > 0):
-            score += 5; s_crowd += 5
-            tags["oi_squeeze"] = True
+    if abs(oi_chg) > 0.03 and funding > 0:
+        score += 5; s_crowd += 5
+        tags["oi_squeeze"] = True
 
-    # Funding divergence
     if abs(fdiv) > cfg.DIV_THRESH and abs(fdivz) > cfg.DIV_Z_THRESH:
-        if (direction == "BUY" and fdiv > 0) or (direction == "SELL" and fdiv < 0):
+        if fdiv < 0:  # SELL aligned divergence
             score += cfg.DIV_BOOST; s_crowd += cfg.DIV_BOOST
             tags["funding_div"] = True
 
-    # ── Layer 4: Regime/Session (±10 pts) ─────────────────────
+    # ── Layer 4: Session (required for res_sweep) ─────────────
     hour_utc = extra.get("hour_utc", 12)
 
-    # Session bonus
-    if 8 <= hour_utc <= 16:
-        score += 10; s_gate += 10
-        tags["session"] = "good"
-    else:
-        tags["session"] = "off"
+    # 🔑 SURGICAL: res_sweep only in session (08-16 UTC)
+    if not (8 <= hour_utc <= 16):
+        return None  # Off-session res_sweep বাদ
+    
+    score += 10; s_gate += 10
+    tags["session"] = "good"
 
-    # ── OPTION G: sup_sweep BUY in session suppress ──
-    if (tags.get("zone") == "sup_sweep" and direction == "BUY" 
-        and 8 <= hour_utc <= 16):
-        return None
-
-    # Counter-trend penalty
-    if tags.get("zone") == "sup_sweep" and regime == "TREND_DOWN":
-        score -= 10; s_gate -= 10
-        tags["counter_trend"] = True
-    elif tags.get("zone") == "res_sweep" and regime == "TREND_UP":
+    # TREND_UP-এ res_sweep counter-trend, penalty
+    if regime == "TREND_UP":
         score -= 10; s_gate -= 10
         tags["counter_trend"] = True
 
-    # High volatility penalty
+    # High vol penalty
     if rv_pct > 0.9:
         score -= 10; s_gate -= 10
         tags["high_vol"] = True
 
-    # ── Quality-First Gates ───────────────────────────────────
+    # ── Quality Gates ─────────────────────────────────────────
     if _f(row.get("vol_ratio"), 0) < cfg.VOL_CONFIRM_RATIO:
         return None
     if rv_pct < cfg.VOL_BAND_LOW or rv_pct > cfg.VOL_BAND_HIGH:
         return None
 
-    # ── Final decision (adaptive MIN_SCORE) ───────────────────
+    # ── Final decision ────────────────────────────────────────
     min_score = cfg.MIN_SCORE_BACKTEST if is_backtest else cfg.MIN_SCORE_LIVE
     if score < min_score:
         return None
 
-    # ── SL/TP calculation ─────────────────────────────────────
-    if direction == "BUY":
-        sl = px - cfg.SL_ATR * atr_val
-        risk = px - sl
-        tp = px + risk * cfg.TP_RR
-    else:
-        sl = px + cfg.SL_ATR * atr_val
-        risk = sl - px
-        tp = px - risk * cfg.TP_RR
+    # ── SL/TP ─────────────────────────────────────────────────
+    sl = px + cfg.SL_ATR * atr_val
+    risk = sl - px
+    tp = px - risk * cfg.TP_RR
 
     return {
         "side": direction,
@@ -208,4 +144,4 @@ def evaluate(row, extra, is_backtest=False):
         "regime": regime,
         "tags": tags,
         "zone": tags.get("zone", ""),
-        }
+    }
