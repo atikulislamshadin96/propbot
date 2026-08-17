@@ -4,6 +4,7 @@ from okx_data import okx_funding_history
 
 
 def _to_series(rows):
+    """Convert raw funding rows to hourly-resampled Series"""
     df = pd.DataFrame(rows)
     if df.empty:
         return None
