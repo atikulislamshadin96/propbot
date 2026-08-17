@@ -1,7 +1,3 @@
-# ============================================================
-# scan.py — Main orchestrator, runs every 15 min via cron
-# FIXED: Uses non-geo-blocked data sources (Binance vision + Bybit)
-# ============================================================
 import os
 import requests
 import pandas as pd
@@ -19,11 +15,7 @@ SYMBOL = cfg.SYMBOL
 INTERVAL = cfg.INTERVAL
 
 
-# ────────────────────────────────────────────────────────────
-# Helpers
-# ────────────────────────────────────────────────────────────
 def send_telegram(msg):
-    """Send message to Telegram (silent failure if not configured)"""
     if not (cfg.TG_TOKEN and cfg.TG_CHAT_ID):
         return
     try:
@@ -36,7 +28,6 @@ def send_telegram(msg):
 
 
 def heartbeat():
-    """Update keepalive.txt so GitHub doesn't disable the cron (60-day rule)"""
     try:
         with open("keepalive.txt", "w") as f:
             f.write(f"last_scan: {datetime.now(timezone.utc).isoformat()}\n")
@@ -45,7 +36,6 @@ def heartbeat():
 
 
 def collect_gex():
-    """Passive GEX collection (Track 3, gated). Never blocks the scan."""
     try:
         import gex_collector
         snap = gex_collector.snapshot()
@@ -56,20 +46,12 @@ def collect_gex():
         print(f"[GEX] skip: {e}")
 
 
-# ────────────────────────────────────────────────────────────
-# Main scan
-# ────────────────────────────────────────────────────────────
 def main():
     print(f"[{datetime.now(timezone.utc).isoformat()}] scan start | "
           f"{SYMBOL} {INTERVAL} | program={cfg.ACTIVE_PROGRAM}")
     heartbeat()
 
-    # ── 1. Fetch klines (non-geo-blocked source) ─────────────
-    try:
-        rows = klines(SYMBOL, INTERVAL, 500)
-    except Exception as e:
-        print(f"[ERROR] klines failed: {e}")
-        return
+    rows = klines(SYMBOL, INTERVAL, 1000)
     if not rows or len(rows) < 100:
         print("[ERROR] insufficient klines")
         return
@@ -77,7 +59,6 @@ def main():
     df = pd.DataFrame(rows).sort_values("ts").reset_index(drop=True)
     df = compute_features(df)
 
-    # ── 2. Funding + OI + divergence (Bybit/OKX, not blocked) ─
     try:
         fund = bybit_funding_current(SYMBOL)
     except Exception:
@@ -94,10 +75,8 @@ def main():
     except Exception:
         fdiv, fdivz = 0.0, 0.0
 
-    # ── 3. Passive GEX collection (never blocks) ─────────────
     collect_gex()
 
-    # ── 4. Check SL/TP on last COMPLETED candle ──────────────
     if len(df) >= 2:
         last_done = df.iloc[-2]
         closed = db.check_and_close(
@@ -114,13 +93,10 @@ def main():
             print(f"[CLOSE] #{t['id']} {t['status'].upper()} "
                   f"pnl={t['pnl_pct']:+.2f}%")
 
-    # ── 5. Pre-signal risk gates (Track 0) ───────────────────
-    # Gate A: max concurrent positions
     if len(db.open_trades()) >= cfg.MAX_POSITIONS:
         print(f"[SKIP] max open positions ({cfg.MAX_POSITIONS}) reached")
         return
 
-    # Gate B: daily loss circuit breaker (80% of daily limit)
     daily_pnl = db.daily_pnl_pct()
     daily_limit = cfg.P["daily_loss_pct"]
     if daily_pnl < 0 and abs(daily_pnl) >= daily_limit * 0.8:
@@ -128,12 +104,10 @@ def main():
               f"({daily_limit}%) — circuit breaker")
         return
 
-    # Gate C: 30-min cooldown after last closed trade
     if not db.check_cooldown(30):
         print("[SKIP] 30-min cooldown active")
         return
 
-    # ── 6. Generate signal on last COMPLETED candle ──────────
     row = df.iloc[-2].to_dict()
     extra = {
         "funding": fund,
@@ -149,7 +123,6 @@ def main():
               f"fund={fund:+.5f} oi_chg={oi_chg:+.3f} div={fdiv:+.5f} z={fdivz:+.2f}")
         return
 
-    # ── 7. Open paper trade + log + notify ───────────────────
     db.log_signal(sig)
     trade_id = db.open_trade(sig, cfg.MAX_RISK_PCT)
 
