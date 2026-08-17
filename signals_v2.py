@@ -13,7 +13,7 @@ def _f(x, default=0.0):
         return default
 
 
-def evaluate(row, extra):
+def evaluate(row, extra, is_backtest=False):
     """
     Evaluate a completed candle row + extra signals.
     Returns signal dict or None.
@@ -77,7 +77,7 @@ def evaluate(row, extra):
             score += 25; s_zone += 25
             direction = "SELL"; tags["zone"] = "breakout"
 
-    # Level bounce (RANGE only — reduced weight)
+    # Level bounce (RANGE only)
     if direction is None and regime == "RANGE":
         if prior_low > 0 and (px - prior_low) <= 0.3 * atr_val and rsi_val < 45:
             score += 10; s_zone += 10
@@ -106,6 +106,15 @@ def evaluate(row, extra):
         score += 5; s_flow += 5
     elif direction == "SELL" and taker_ratio < 0.40:
         score += 5; s_flow += 5
+
+    # ── OPTION A: SOFT GATE (penalize in backtest, reject in live) ──
+    # Live: Bybit/Binance data available → s_flow meaningful → hard gate
+    # Backtest: US-blocked → s_flow often 0 → soft gate (penalize, don't reject)
+    if cfg.OPTION_A_SOFT and is_backtest and s_flow < 5:
+        score -= 10; s_gate -= 10
+        tags["l2_missing"] = True
+    elif not is_backtest and s_flow < 5:
+        return None  # Live mode: hard reject
 
     # ── Layer 3: Crowding (max ~20 pts) ───────────────────────
     funding = _f(extra.get("funding"))
@@ -148,7 +157,6 @@ def evaluate(row, extra):
         tags["session"] = "off"
 
     # ── OPTION G: sup_sweep BUY in session suppress ──
-    # Poison bucket: n=58, WR=25.9%, net=-10.88%
     if (tags.get("zone") == "sup_sweep" and direction == "BUY" 
         and 8 <= hour_utc <= 16):
         return None
@@ -166,18 +174,15 @@ def evaluate(row, extra):
         score -= 10; s_gate -= 10
         tags["high_vol"] = True
 
-    # ── Phase 1 REMOVED — too aggressive, killing good trades ──
-    # DVOL gate and skew penalty removed for now
-    # Will add back incrementally after baseline is established
-
-    # ── Quality-First Gates (safe subset) ─────────────────────
+    # ── Quality-First Gates ───────────────────────────────────
     if _f(row.get("vol_ratio"), 0) < cfg.VOL_CONFIRM_RATIO:
         return None
     if rv_pct < cfg.VOL_BAND_LOW or rv_pct > cfg.VOL_BAND_HIGH:
         return None
 
-    # ── Final decision ────────────────────────────────────────
-    if score < cfg.MIN_SCORE:
+    # ── Final decision (adaptive MIN_SCORE) ───────────────────
+    min_score = cfg.MIN_SCORE_BACKTEST if is_backtest else cfg.MIN_SCORE_LIVE
+    if score < min_score:
         return None
 
     # ── SL/TP calculation ─────────────────────────────────────
