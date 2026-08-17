@@ -107,12 +107,6 @@ def evaluate(row, extra):
     elif direction == "SELL" and taker_ratio < 0.40:
         score += 5; s_flow += 5
 
-    # ── OPTION A: RELAXED — শুধু bonus, gate না ──
-    # Bybit US-blocked → CVD/taker data mostly unavailable in backtest
-    # তাই gate সরিয়ে দিয়েছি, শুধু score bonus থাকবে (যদি data থাকে)
-    # Live-তে data available হলে bonus পাবে, না হলে 0
-    # (আগে s_flow < 5 হলে reject করত — সেটা এখন নেই)
-
     # ── Layer 3: Crowding (max ~20 pts) ───────────────────────
     funding = _f(extra.get("funding"))
     oi_chg = _f(extra.get("oi_chg"))
@@ -153,7 +147,7 @@ def evaluate(row, extra):
     else:
         tags["session"] = "off"
 
-    # ── OPTION G: KEEP — sup_sweep BUY in session suppress ──
+    # ── OPTION G: sup_sweep BUY in session suppress ──
     # Poison bucket: n=58, WR=25.9%, net=-10.88%
     if (tags.get("zone") == "sup_sweep" and direction == "BUY" 
         and 8 <= hour_utc <= 16):
@@ -172,21 +166,9 @@ def evaluate(row, extra):
         score -= 10; s_gate -= 10
         tags["high_vol"] = True
 
-    # ── Vol/Skew Regime Gate (Phase 1 advanced layer) ─────────
-    dvol_pct = _f(extra.get("dvol_pct"), 0.5)
-    rr_25d = extra.get("rr_25d")
-
-    # High-vol chop suppress
-    if regime == "RANGE" and dvol_pct > 0.85:
-        return None
-
-    # Skew penalty
-    if direction == "BUY" and rr_25d is not None and rr_25d < -5.0:
-        score -= 5; s_gate -= 5
-        tags["skew_against"] = True
-    elif direction == "SELL" and rr_25d is not None and rr_25d > 5.0:
-        score -= 5; s_gate -= 5
-        tags["skew_against"] = True
+    # ── Phase 1 REMOVED — too aggressive, killing good trades ──
+    # DVOL gate and skew penalty removed for now
+    # Will add back incrementally after baseline is established
 
     # ── Quality-First Gates (safe subset) ─────────────────────
     if _f(row.get("vol_ratio"), 0) < cfg.VOL_CONFIRM_RATIO:
@@ -221,4 +203,4 @@ def evaluate(row, extra):
         "regime": regime,
         "tags": tags,
         "zone": tags.get("zone", ""),
-    }
+        }
