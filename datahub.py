@@ -2,6 +2,7 @@ import pandas as pd
 from bybit_data import bybit_funding_history
 from okx_data import okx_funding_history
 
+
 def _to_series(rows):
     df = pd.DataFrame(rows)
     if df.empty:
@@ -9,7 +10,9 @@ def _to_series(rows):
     df["dt"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
     return df.set_index("dt")["rate"].resample("1h").last().ffill()
 
+
 def funding_divergence_series(symbol="BTCUSDT"):
+    """Compute bybit-okx funding divergence (both may be US-blocked)"""
     try:
         by = _to_series(bybit_funding_history(symbol, 200))
         ok = _to_series(okx_funding_history())
@@ -23,9 +26,12 @@ def funding_divergence_series(symbol="BTCUSDT"):
     except Exception:
         return None
 
+
 def funding_divergence_current(symbol="BTCUSDT"):
+    """Return current divergence + z-score (with explicit warning if unavailable)"""
     s = funding_divergence_series(symbol)
     if s is None or s.empty:
+        print(f"[WARN] {symbol} divergence unavailable (US-blocked Bybit/OKX)")
         return 0.0, 0.0
     last = s.iloc[-1]
     return float(last["div"]), float(last["div_z"])
