@@ -10,13 +10,12 @@ def _to_series(rows):
     return df.set_index("dt")["rate"].resample("1h").last().ffill()
 
 def funding_divergence_series(symbol="BTCUSDT"):
-    """Track 4: div = bybit - okx (Binance blocked from US runners)"""
     try:
         by = _to_series(bybit_funding_history(symbol, 200))
         ok = _to_series(okx_funding_history())
         if by is None or ok is None:
             return None
-        s = pd.concat([by.rename("by"), ok.rename("ok")], axis=1).dropna()
+        s = pd.concat([by.rename("by"), ok.rename("ok")], axis=1).ffill().dropna()
         s["div"] = s["by"] - s["ok"]
         w = s["div"].rolling(24 * 7, min_periods=24 * 3)
         s["div_z"] = (s["div"] - w.mean()) / (w.std() + 1e-9)
