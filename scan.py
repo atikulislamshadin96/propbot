@@ -73,7 +73,7 @@ def scan_symbol(sym):
     df = pd.DataFrame(rows).sort_values("ts").reset_index(drop=True)
     df = compute_features(df)
 
-    # Funding: Bybit → fallback Hyperliquid (no silent zero)
+    # ── Funding: Bybit → fallback Hyperliquid (no silent zero) ──
     try:
         fund = bybit_funding_current(sym)
         if fund == 0.0:
@@ -82,20 +82,22 @@ def scan_symbol(sym):
         fund, _ = get_hyperliquid_data(coin)
         print(f"[INFO] {sym} funding via hyperliquid: {fund:+.6f}")
 
-    # OI change (Bybit); 0 if blocked
+    # ── OI: Bybit → with explicit warning on failure ──
     try:
         oi = bybit_open_interest_history(sym, 9)
         oi_chg = (oi[0]["oi"] - oi[-1]["oi"]) / oi[-1]["oi"] if len(oi) >= 2 else 0.0
-    except Exception:
+    except Exception as e:
+        print(f"[WARN] {sym} OI zeroed (US-blocked): {e}")
         oi_chg = 0.0
 
-    # Divergence (bybit-okx); 0 if blocked
+    # ── Divergence: bybit-okx → with explicit warning on failure ──
     try:
         fdiv, fdivz = funding_divergence_current(sym)
-    except Exception:
+    except Exception as e:
+        print(f"[WARN] {sym} divergence zeroed (US-blocked): {e}")
         fdiv, fdivz = 0.0, 0.0
 
-    # SL/TP check for this symbol on last completed candle
+    # ── SL/TP check on last completed candle for this symbol ──
     if len(df) >= 2:
         last = df.iloc[-2]
         for t in db.check_and_close(sym, float(last["high"]), float(last["low"]), cfg.FEE_PCT):
@@ -104,7 +106,7 @@ def scan_symbol(sym):
                           f"Side: {t['side']} | PnL: {t['pnl_pct']:+.2f}%")
             print(f"[CLOSE] {sym} #{t['id']} {t['status'].upper()} pnl={t['pnl_pct']:+.2f}%")
 
-    # Global + per-symbol risk gates
+    # ── Global + per-symbol risk gates ──
     if len(db.open_trades()) >= cfg.MAX_POSITIONS:
         print(f"[SKIP] {sym} max total positions")
         return
@@ -119,17 +121,18 @@ def scan_symbol(sym):
         print(f"[SKIP] {sym} cooldown")
         return
 
-    # Evaluate signal on last completed candle
+    # ── Evaluate signal on last completed candle ──
     row = df.iloc[-2].to_dict()
     extra = {"funding": fund, "oi_chg": oi_chg, "funding_div": fdiv,
              "funding_div_z": fdivz, "hour_utc": datetime.now(timezone.utc).hour}
     sig = evaluate(row, extra)
 
     if sig is None:
-        print(f"[IDLE] {sym} no signal | score < {cfg.MIN_SCORE} | fund={fund:+.6f}")
+        print(f"[IDLE] {sym} no signal | score < {cfg.MIN_SCORE} | "
+              f"fund={fund:+.6f} div={fdiv:+.6f}")
         return
 
-    # Open paper trade + log + notify
+    # ── Open paper trade + log + notify ──
     sig["symbol"] = sym
     db.log_signal(sig)
     tid = db.open_trade(sig, cfg.MAX_RISK_PCT)
