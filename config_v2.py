@@ -33,7 +33,7 @@ TOTAL_DD_PCT = P["total_dd_pct"]
 MAX_RISK_PCT = P["max_risk_pct"]
 
 # ── Layer 2 (Fixed — single composite flow score) ───────────
-LAYER_2_MAX_POINTS = 15   # was 31 (triple-counted)
+LAYER_2_MAX_POINTS = 15
 
 # ── Layer 3: GEX (gated) + Divergence ───────────────────────
 USE_GEX = False
@@ -44,3 +44,8 @@ GEX_ZERO_DIST_PCT = 1.0
 DIV_THRESH = 0.00005
 DIV_Z_THRESH = 1.0
 DIV_BOOST = 8
+
+# ── Quality-First Gates (safe subset) ────────────────────────
+VOL_CONFIRM_RATIO = 1.5
+VOL_BAND_LOW = 0.15
+VOL_BAND_HIGH = 0.85
