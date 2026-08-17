@@ -32,7 +32,36 @@ def heartbeat():
         pass
 
 
+def get_hyperliquid_data(coin):
+    """Non-blocked funding/OI source (works from US runners).
+    Hyperliquid pays hourly; x8 to match 8h Binance-equivalent."""
+    try:
+        r = requests.post("https://api.hyperliquid.xyz/info",
+                          json={"type": "metaAndAssetCtxs"}, timeout=10)
+        r.raise_for_status()
+        meta, ctxs = r.json()
+        for i, asset in enumerate(meta["universe"]):
+            name = asset.get("name", "")
+            if name == coin or name.startswith(coin):
+                return float(ctxs[i]["funding"]) * 8.0, float(ctxs[i]["openInterest"])
+    except Exception as e:
+        print(f"[WARN] hyperliquid failed for {coin}: {e}")
+    return 0.0, 0.0
+
+
+def collect_gex():
+    try:
+        import gex_collector
+        snap = gex_collector.snapshot()
+        if snap:
+            print(f"[GEX] dealer_neg={snap['dealer_gex_neg']} "
+                  f"wall={snap['nearest_wall_strike']} ({snap['wall_dist_pct']}%)")
+    except Exception as e:
+        print(f"[GEX] skip: {e}")
+
+
 def scan_symbol(sym):
+    coin = sym.replace("USDT", "")
     try:
         rows = klines(sym, INTERVAL, 1000)
     except Exception as e:
@@ -44,21 +73,29 @@ def scan_symbol(sym):
     df = pd.DataFrame(rows).sort_values("ts").reset_index(drop=True)
     df = compute_features(df)
 
+    # Funding: Bybit → fallback Hyperliquid (no silent zero)
     try:
         fund = bybit_funding_current(sym)
+        if fund == 0.0:
+            raise ValueError("zero funding")
     except Exception:
-        fund = 0.0
+        fund, _ = get_hyperliquid_data(coin)
+        print(f"[INFO] {sym} funding via hyperliquid: {fund:+.6f}")
+
+    # OI change (Bybit); 0 if blocked
     try:
         oi = bybit_open_interest_history(sym, 9)
         oi_chg = (oi[0]["oi"] - oi[-1]["oi"]) / oi[-1]["oi"] if len(oi) >= 2 else 0.0
     except Exception:
         oi_chg = 0.0
+
+    # Divergence (bybit-okx); 0 if blocked
     try:
         fdiv, fdivz = funding_divergence_current(sym)
     except Exception:
         fdiv, fdivz = 0.0, 0.0
 
-    # SL/TP for this symbol
+    # SL/TP check for this symbol on last completed candle
     if len(df) >= 2:
         last = df.iloc[-2]
         for t in db.check_and_close(sym, float(last["high"]), float(last["low"]), cfg.FEE_PCT):
@@ -67,7 +104,7 @@ def scan_symbol(sym):
                           f"Side: {t['side']} | PnL: {t['pnl_pct']:+.2f}%")
             print(f"[CLOSE] {sym} #{t['id']} {t['status'].upper()} pnl={t['pnl_pct']:+.2f}%")
 
-    # Global + per-symbol gates
+    # Global + per-symbol risk gates
     if len(db.open_trades()) >= cfg.MAX_POSITIONS:
         print(f"[SKIP] {sym} max total positions")
         return
@@ -82,15 +119,17 @@ def scan_symbol(sym):
         print(f"[SKIP] {sym} cooldown")
         return
 
+    # Evaluate signal on last completed candle
     row = df.iloc[-2].to_dict()
     extra = {"funding": fund, "oi_chg": oi_chg, "funding_div": fdiv,
              "funding_div_z": fdivz, "hour_utc": datetime.now(timezone.utc).hour}
     sig = evaluate(row, extra)
 
     if sig is None:
-        print(f"[IDLE] {sym} no signal | score < {cfg.MIN_SCORE}")
+        print(f"[IDLE] {sym} no signal | score < {cfg.MIN_SCORE} | fund={fund:+.6f}")
         return
 
+    # Open paper trade + log + notify
     sig["symbol"] = sym
     db.log_signal(sig)
     tid = db.open_trade(sig, cfg.MAX_RISK_PCT)
@@ -105,6 +144,7 @@ def main():
     print(f"[{datetime.now(timezone.utc).isoformat()}] scan start | "
           f"{cfg.SYMBOLS} | program={cfg.ACTIVE_PROGRAM}")
     heartbeat()
+    collect_gex()
     for sym in cfg.SYMBOLS:
         scan_symbol(sym)
 
