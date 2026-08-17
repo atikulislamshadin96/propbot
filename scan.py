@@ -8,6 +8,7 @@ from bybit_data import bybit_funding_current, bybit_open_interest_history
 from datahub import funding_divergence_current
 from features import compute_features
 from signals_v2 import evaluate
+from deribit_skew import skew_features
 import paper_db as db
 
 INTERVAL = cfg.INTERVAL
@@ -121,15 +122,24 @@ def scan_symbol(sym):
         print(f"[SKIP] {sym} cooldown")
         return
 
+    # ── Fetch Deribit skew features (cached per currency within run) ──
+    skew = skew_features(coin)
+
     # ── Evaluate signal on last completed candle ──
     row = df.iloc[-2].to_dict()
     extra = {"funding": fund, "oi_chg": oi_chg, "funding_div": fdiv,
-             "funding_div_z": fdivz, "hour_utc": datetime.now(timezone.utc).hour}
+             "funding_div_z": fdivz, "hour_utc": datetime.now(timezone.utc).hour,
+             "dvol": skew.get("dvol"), "dvol_pct": skew.get("dvol_pct"),
+             "rr_25d": skew.get("rr_25d")}
     sig = evaluate(row, extra)
 
     if sig is None:
+        dvol_pct = skew.get("dvol_pct")
+        rr = skew.get("rr_25d")
         print(f"[IDLE] {sym} no signal | score < {cfg.MIN_SCORE} | "
-              f"fund={fund:+.6f} div={fdiv:+.6f}")
+              f"fund={fund:+.6f} div={fdiv:+.6f} "
+              f"dvol_pct={dvol_pct if dvol_pct is not None else '—'} "
+              f"rr_25d={rr if rr is not None else '—'}")
         return
 
     # ── Open paper trade + log + notify ──
