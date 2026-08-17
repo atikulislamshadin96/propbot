@@ -4,7 +4,7 @@ import os
 SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 SYMBOL = SYMBOLS[0]   # backward compatibility
 INTERVAL = "15m"
-MIN_SCORE = 45
+MIN_SCORE = 40
 SL_ATR = 1.5
 TP_RR = 2.0
 MAX_TRADES_DAY = 3
@@ -47,6 +47,6 @@ DIV_Z_THRESH = 1.0
 DIV_BOOST = 8
 
 # ── Quality-First Gates (safe subset) ────────────────────────
-VOL_CONFIRM_RATIO = 1.2
+VOL_CONFIRM_RATIO = 1.1
 VOL_BAND_LOW = 0.10
 VOL_BAND_HIGH = 0.90
