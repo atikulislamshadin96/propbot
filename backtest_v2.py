@@ -1,7 +1,8 @@
 # ============================================================
 # backtest_v2.py — Multi-asset, non-blocked data sources
-# + Phase 1: Deribit DVOL/skew regime gate (merge_skew)
-# python backtest_v2.py --days 60 [--with-foi]
+# + Phase 1: Deribit DVOL/skew regime gate
+# + Recovery: Passes is_backtest=True to evaluate()
+# python backtest_v2.py --days 90 --with-foi
 # ============================================================
 import argparse
 import requests
@@ -155,7 +156,11 @@ def run(symbols, days, with_foi):
                          "dvol": row.get("dvol"),
                          "dvol_pct": row.get("dvol_pct", 0.5),
                          "rr_25d": row.get("rr_25d")}
-                sig = evaluate(row, extra)
+                
+                # 🔑 RECOVERY FIX: Pass is_backtest=True so signals_v2 uses MIN_SCORE_BACKTEST (25)
+                # and applies soft penalty for Option A instead of hard reject.
+                sig = evaluate(row, extra, is_backtest=True)
+                
                 if sig:
                     nxt = df.iloc[i + 1]
                     open_pos = {"side": sig["side"], "entry": float(nxt["open"]),
@@ -215,7 +220,7 @@ def cohort(trades):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--days", type=int, default=60)
+    ap.add_argument("--days", type=int, default=90)
     ap.add_argument("--with-foi", action="store_true")
     a = ap.parse_args()
 
