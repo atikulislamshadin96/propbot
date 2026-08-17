@@ -1,53 +1,54 @@
 # ============================================================
-# backtest_v2.py — Historical backtest with SAME evaluate() as live
+# backtest_v2.py — FIXED: uses only non-blocked data sources
 # python backtest_v2.py --days 60 [--with-foi]
 # ============================================================
-import argparse, requests
+import argparse
+import requests
 import numpy as np
 import pandas as pd
 from datetime import datetime, timezone
 
 import config_v2 as cfg
-from binance_data import funding_history
-from bybit_data import bybit_funding_history
-from okx_data import okx_funding_history
+from bybit_data import bybit_funding_history, bybit_open_interest_history
 from datahub import funding_divergence_series
 from features import compute_features
 from signals_v2 import evaluate
 
+
 def fetch_range(symbol, interval, days):
-    """Paginated klines fetch (Binance max 1000/call)"""
+    """Paginated klines — non-blocked vision endpoint (FIXED)"""
+    BASE = "https://data-api.binance.vision"
     out = []
     end = int(datetime.now(timezone.utc).timestamp() * 1000)
     start = end - days * 86400 * 1000
-    while end > start:
-        r = requests.get("https://fapi.binance.com/fapi/v1/klines",
+    cursor = start
+    while cursor < end:
+        r = requests.get(f"{BASE}/api/v3/klines",
                          params={"symbol": symbol, "interval": interval,
-                                 "limit": 1000, "endTime": end}, timeout=20)
+                                 "limit": 1000, "startTime": cursor, "endTime": end},
+                         timeout=20)
         r.raise_for_status()
         batch = r.json()
         if not batch:
             break
-        out = batch + out
-        end = batch[0][0] - 1
+        out.extend(batch)
+        nxt = int(batch[-1][0]) + 1
+        if nxt <= cursor:
+            break
+        cursor = nxt
     rows = [{"ts": int(k[0]), "open": float(k[1]), "high": float(k[2]),
              "low": float(k[3]), "close": float(k[4]), "volume": float(k[5]),
              "taker_buy": float(k[9])} for k in out]
-    return pd.DataFrame(rows).sort_values("ts").reset_index(drop=True)
+    return (pd.DataFrame(rows).drop_duplicates("ts")
+            .sort_values("ts").reset_index(drop=True))
 
-def oi_history(symbol, limit=500):
-    r = requests.get("https://fapi.binance.com/futures/data/openInterestHist",
-                     params={"symbol": symbol, "period": "1h", "limit": limit},
-                     timeout=15)
-    r.raise_for_status()
-    return [{"ts": int(x["timestamp"]), "oi": float(x["sumOpenInterest"])}
-            for x in r.json()]
 
 def merge_foi(df, symbol):
+    """Funding/OI/divergence from non-blocked sources (FIXED)"""
     df = df.copy()
     df["time"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
     try:
-        fh = pd.DataFrame(funding_history(symbol, 1000))
+        fh = pd.DataFrame(bybit_funding_history(symbol, 200))
         fh["time"] = pd.to_datetime(fh["ts"], unit="ms", utc=True)
         df = pd.merge_asof(df, fh[["time", "rate"]].rename(
             columns={"rate": "funding"}).sort_values("time"),
@@ -55,11 +56,11 @@ def merge_foi(df, symbol):
     except Exception:
         df["funding"] = 0.0
     try:
-        oh = pd.DataFrame(oi_history(symbol))
+        oh = pd.DataFrame(bybit_open_interest_history(symbol, 200))
         oh["time"] = pd.to_datetime(oh["ts"], unit="ms", utc=True)
         df = pd.merge_asof(df, oh[["time", "oi"]].sort_values("time"),
                            on="time", direction="backward")
-        df["oi_chg"] = df["oi"].pct_change(32)  # ~8h on 15m
+        df["oi_chg"] = df["oi"].pct_change(32)
     except Exception:
         df["oi_chg"] = 0.0
     try:
@@ -75,6 +76,7 @@ def merge_foi(df, symbol):
     df["div"] = df.get("div", pd.Series(0.0, index=df.index)).fillna(0.0)
     df["div_z"] = df.get("div_z", pd.Series(0.0, index=df.index)).fillna(0.0)
     return df
+
 
 def run(symbol, days, with_foi):
     df = fetch_range(symbol, "15m", days)
@@ -93,7 +95,6 @@ def run(symbol, days, with_foi):
 
     for i in range(60, n):
         c = df.iloc[i]
-        # resolve open position on this candle
         if open_pos:
             o = open_pos
             if o["side"] == "BUY":
@@ -109,11 +110,9 @@ def run(symbol, days, with_foi):
                        if o["side"] == "BUY"
                        else (o["entry"] - exit_px) / o["entry"] * 100)
                 trades.append({**o, "exit": exit_px, "res": res,
-                               "pnl_pct": round(pnl - fee, 3),
-                               "close_bar": i})
+                               "pnl_pct": round(pnl - fee, 3), "close_bar": i})
                 open_pos = None
 
-        # new signal on completed candle i, enter at i+1
         if open_pos is None and i + 1 < n:
             row = df.iloc[i].to_dict()
             extra = {"funding": row.get("funding", 0.0),
@@ -130,6 +129,7 @@ def run(symbol, days, with_foi):
                             "open_bar": i + 1}
 
     return {"trades": trades, "n_bars": n, "df": df}
+
 
 def metrics(trades):
     if not trades:
@@ -151,6 +151,7 @@ def metrics(trades):
         "max_dd_pct": round(max_dd, 2),
     }
 
+
 def monte_carlo(trades, sims=200):
     if len(trades) < 5:
         return {}
@@ -160,10 +161,13 @@ def monte_carlo(trades, sims=200):
         np.random.shuffle(pnls)
         eq = np.cumprod(1 + pnls / 100)
         finals.append(eq[-1])
-        if (1 - eq).max() > 0.10:
+        peak = np.maximum.accumulate(eq)
+        dd = (eq - peak) / peak
+        if dd.min() < -0.10:  # FIXED: trailing drawdown
             ruins += 1
     return {"mc_median_final": round(float(np.median(finals)), 3),
             "mc_ruin_prob": round(100 * ruins / sims, 1)}
+
 
 def cohort(trades):
     out = {}
@@ -172,6 +176,7 @@ def cohort(trades):
         out.setdefault(z, []).append(t["pnl_pct"])
     return {z: {"n": len(v), "wr": round(100 * sum(1 for x in v if x > 0) / len(v), 1)}
             for z, v in out.items()}
+
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
