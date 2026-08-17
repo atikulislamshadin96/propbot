@@ -77,7 +77,7 @@ def evaluate(row, extra):
             score += 25; s_zone += 25
             direction = "SELL"; tags["zone"] = "breakout"
 
-    # Level bounce (RANGE only — reduced weight due to historical underperformance)
+    # Level bounce (RANGE only — reduced weight)
     if direction is None and regime == "RANGE":
         if prior_low > 0 and (px - prior_low) <= 0.3 * atr_val and rsi_val < 45:
             score += 10; s_zone += 10
@@ -93,7 +93,7 @@ def evaluate(row, extra):
     cvd_div = _f(row.get("cvd_div"))
     taker_ratio = _f(row.get("taker_ratio"), 0.5)
 
-    # CVD divergence (price ↓ but CVD ↑ = buy pressure accumulation)
+    # CVD divergence
     if direction == "BUY" and cvd_div > 0.3:
         score += 10; s_flow += 10
         tags["cvd_div"] = True
@@ -101,18 +101,17 @@ def evaluate(row, extra):
         score += 10; s_flow += 10
         tags["cvd_div"] = True
 
-    # Taker ratio alignment (strong buyers/sellers)
+    # Taker ratio alignment
     if direction == "BUY" and taker_ratio > 0.60:
         score += 5; s_flow += 5
     elif direction == "SELL" and taker_ratio < 0.40:
         score += 5; s_flow += 5
 
-    # ── OPTION A: L2 Confirmation Gate (required for all entries) ──
-    # Data shows: flow=0 trades → 33.8% WR, -0.080% avg, net -5.41%
-    #            flow>0 trades → 35.9% WR, +0.046% avg, net +4.26%
-    # Reject any entry without flow confirmation (s_flow >= 5)
-    if s_flow < 5:
-        return None
+    # ── OPTION A: RELAXED — শুধু bonus, gate না ──
+    # Bybit US-blocked → CVD/taker data mostly unavailable in backtest
+    # তাই gate সরিয়ে দিয়েছি, শুধু score bonus থাকবে (যদি data থাকে)
+    # Live-তে data available হলে bonus পাবে, না হলে 0
+    # (আগে s_flow < 5 হলে reject করত — সেটা এখন নেই)
 
     # ── Layer 3: Crowding (max ~20 pts) ───────────────────────
     funding = _f(extra.get("funding"))
@@ -120,7 +119,7 @@ def evaluate(row, extra):
     fdiv = _f(extra.get("funding_div"))
     fdivz = _f(extra.get("funding_div_z"))
 
-    # Funding alignment (extreme funding in signal direction)
+    # Funding alignment
     if direction == "BUY" and funding < -0.0005:
         score += 15; s_crowd += 15
         tags["fund_extreme"] = True
@@ -132,13 +131,13 @@ def evaluate(row, extra):
     elif direction == "SELL" and funding > 0:
         score += 8; s_crowd += 8
 
-    # OI squeeze (OI rising + funding aligned)
+    # OI squeeze
     if abs(oi_chg) > 0.03:
         if (direction == "BUY" and funding < 0) or (direction == "SELL" and funding > 0):
             score += 5; s_crowd += 5
             tags["oi_squeeze"] = True
 
-    # Multi-exchange funding divergence (rare edge)
+    # Funding divergence
     if abs(fdiv) > cfg.DIV_THRESH and abs(fdivz) > cfg.DIV_Z_THRESH:
         if (direction == "BUY" and fdiv > 0) or (direction == "SELL" and fdiv < 0):
             score += cfg.DIV_BOOST; s_crowd += cfg.DIV_BOOST
@@ -147,21 +146,20 @@ def evaluate(row, extra):
     # ── Layer 4: Regime/Session (±10 pts) ─────────────────────
     hour_utc = extra.get("hour_utc", 12)
 
-    # Session bonus (London+NY = highest liquidity)
+    # Session bonus
     if 8 <= hour_utc <= 16:
         score += 10; s_gate += 10
         tags["session"] = "good"
     else:
         tags["session"] = "off"
 
-    # ── OPTION G: sup_sweep BUY in session = poison bucket (suppress) ──
-    # Data shows: sup_sweep BUY + 8-16 UTC → n=58, WR=25.9%, net=-10.88%
-    # This is the single largest loss bucket — suppress entirely
+    # ── OPTION G: KEEP — sup_sweep BUY in session suppress ──
+    # Poison bucket: n=58, WR=25.9%, net=-10.88%
     if (tags.get("zone") == "sup_sweep" and direction == "BUY" 
         and 8 <= hour_utc <= 16):
         return None
 
-    # Counter-trend penalty (sweep against trend = lower prob)
+    # Counter-trend penalty
     if tags.get("zone") == "sup_sweep" and regime == "TREND_DOWN":
         score -= 10; s_gate -= 10
         tags["counter_trend"] = True
@@ -169,26 +167,24 @@ def evaluate(row, extra):
         score -= 10; s_gate -= 10
         tags["counter_trend"] = True
 
-    # High volatility penalty (extreme vol = chop)
+    # High volatility penalty
     if rv_pct > 0.9:
         score -= 10; s_gate -= 10
         tags["high_vol"] = True
 
     # ── Vol/Skew Regime Gate (Phase 1 advanced layer) ─────────
     dvol_pct = _f(extra.get("dvol_pct"), 0.5)
-    rr_25d = extra.get("rr_25d")  # None-safe, don't use _f yet
+    rr_25d = extra.get("rr_25d")
 
-    # High-vol chop: suppress RANGE entries when DVOL > 85th percentile
+    # High-vol chop suppress
     if regime == "RANGE" and dvol_pct > 0.85:
         return None
 
-    # Extreme skew against direction: require stronger confirmation
+    # Skew penalty
     if direction == "BUY" and rr_25d is not None and rr_25d < -5.0:
-        # Market priced for downside — need +5 extra points
         score -= 5; s_gate -= 5
         tags["skew_against"] = True
     elif direction == "SELL" and rr_25d is not None and rr_25d > 5.0:
-        # Market priced for upside — need +5 extra points
         score -= 5; s_gate -= 5
         tags["skew_against"] = True
 
