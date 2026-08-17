@@ -131,12 +131,15 @@ def scan_symbol(sym):
              "funding_div_z": fdivz, "hour_utc": datetime.now(timezone.utc).hour,
              "dvol": skew.get("dvol"), "dvol_pct": skew.get("dvol_pct"),
              "rr_25d": skew.get("rr_25d")}
-    sig = evaluate(row, extra)
+    
+    # 🔑 RECOVERY FIX: Pass is_backtest=False for live scanning
+    # This ensures MIN_SCORE_LIVE (40) and hard Option A reject are used
+    sig = evaluate(row, extra, is_backtest=False)
 
     if sig is None:
         dvol_pct = skew.get("dvol_pct")
         rr = skew.get("rr_25d")
-        print(f"[IDLE] {sym} no signal | score < {cfg.MIN_SCORE} | "
+        print(f"[IDLE] {sym} no signal | score < {cfg.MIN_SCORE_LIVE} | "
               f"fund={fund:+.6f} div={fdiv:+.6f} "
               f"dvol_pct={dvol_pct if dvol_pct is not None else '—'} "
               f"rr_25d={rr if rr is not None else '—'}")
