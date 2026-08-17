@@ -4,12 +4,25 @@ import os
 SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 SYMBOL = SYMBOLS[0]   # backward compatibility
 INTERVAL = "15m"
-MIN_SCORE = 40
+
+# ── Adaptive MIN_SCORE (Live vs Backtest) ───────────────────
+# Backtest-এ L2/L3 data US-blocked → zeroed, তাই score কমে যায়
+# Live-তে সব data available → full 40 threshold
+MIN_SCORE_LIVE = 40
+MIN_SCORE_BACKTEST = 25
+MIN_SCORE = MIN_SCORE_LIVE  # backward compatibility alias
+
 SL_ATR = 1.5
 TP_RR = 2.0
 MAX_TRADES_DAY = 3
 MAX_POSITIONS = 2
 FEE_PCT = 0.05
+
+# ── Option A Soft Gate (Recovery from earlier mistake) ──────
+# Live: s_flow < 5 → hard reject (data available)
+# Backtest: s_flow < 5 → soft penalty -10 (data often zeroed due to US-block)
+OPTION_A_SOFT = True
+L2_ZERO_SOFTEN = True
 
 # ── Secrets (GitHub Secrets থেকে) ───────────────────────────
 NEWS_API_KEY = os.getenv("NEWS_API_KEY", "")
