@@ -3,7 +3,7 @@ import os
 # ── Basic Settings ──────────────────────────────────────────
 SYMBOL = "BTCUSDT"
 INTERVAL = "15m"
-MIN_SCORE = 50
+MIN_SCORE = 45
 SL_ATR = 1.5
 TP_RR = 2.0
 MAX_TRADES_DAY = 3
