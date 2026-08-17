@@ -1,5 +1,6 @@
 # ============================================================
 # backtest_v2.py — Multi-asset, non-blocked data sources
+# + Phase 1: Deribit DVOL/skew regime gate (merge_skew)
 # python backtest_v2.py --days 60 [--with-foi]
 # ============================================================
 import argparse
@@ -13,6 +14,7 @@ from bybit_data import bybit_funding_history, bybit_open_interest_history
 from datahub import funding_divergence_series
 from features import compute_features
 from signals_v2 import evaluate
+from deribit_skew import get_dvol_series
 
 
 def fetch_range(symbol, interval, days):
@@ -78,6 +80,27 @@ def merge_foi(df, symbol):
     return df
 
 
+def merge_skew(df, currency):
+    """Merge Deribit DVOL + trailing percentile onto df by time (backward asof).
+    RR has no public history — left as NaN (gate simply won't fire on it)."""
+    df = df.copy()
+    df["time"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
+    try:
+        s = get_dvol_series(currency, days=90)
+        if len(s) >= 2:
+            s_pct = s.rolling(24 * 90, min_periods=24 * 7).rank(pct=True)
+            sdf = pd.DataFrame({"time": s.index, "dvol": s.values,
+                                "dvol_pct": s_pct.values}).dropna()
+            df = pd.merge_asof(df, sdf.sort_values("time"),
+                               on="time", direction="backward")
+    except Exception as e:
+        print(f"[WARN] deribit skew history failed for {currency}: {e}")
+    df["dvol"] = df.get("dvol", pd.Series(np.nan, index=df.index)).fillna(np.nan)
+    df["dvol_pct"] = df.get("dvol_pct", pd.Series(np.nan, index=df.index)).fillna(0.5)
+    df["rr_25d"] = np.nan
+    return df
+
+
 def run(symbols, days, with_foi):
     if isinstance(symbols, str):
         symbols = [symbols]
@@ -87,11 +110,15 @@ def run(symbols, days, with_foi):
         df = fetch_range(sym, "15m", days)
         if with_foi:
             df = merge_foi(df, sym)
+            df = merge_skew(df, sym.replace("USDT", ""))
         else:
             df["funding"] = 0.0
             df["oi_chg"] = 0.0
             df["div"] = 0.0
             df["div_z"] = 0.0
+            df["dvol"] = np.nan
+            df["dvol_pct"] = 0.5
+            df["rr_25d"] = np.nan
         df = compute_features(df)
         n_bars = max(n_bars, len(df))
 
@@ -124,7 +151,10 @@ def run(symbols, days, with_foi):
                          "oi_chg": row.get("oi_chg", 0.0),
                          "funding_div": row.get("div", 0.0),
                          "funding_div_z": row.get("div_z", 0.0),
-                         "hour_utc": pd.Timestamp(row["ts"], unit="ms", tz="UTC").hour}
+                         "hour_utc": pd.Timestamp(row["ts"], unit="ms", tz="UTC").hour,
+                         "dvol": row.get("dvol"),
+                         "dvol_pct": row.get("dvol_pct", 0.5),
+                         "rr_25d": row.get("rr_25d")}
                 sig = evaluate(row, extra)
                 if sig:
                     nxt = df.iloc[i + 1]
