@@ -45,7 +45,7 @@ def open_trade(sig, risk_pct):
         "pnl_pct": None,
         "closed_ts": None,
         "risk_pct": risk_pct,
-        **{k: sig[k] for k in ("side", "entry", "sl", "tp", "score",
+        **{k: sig[k] for k in ("symbol", "side", "entry", "sl", "tp", "score",
                                 "regime", "s_zone", "s_flow", "s_crowd", "s_gate")
            if k in sig}
     }
@@ -55,24 +55,24 @@ def open_trade(sig, risk_pct):
     return t["id"]
 
 
-def open_trades():
-    return [t for t in _read(TRADES) if t.get("status") == "open"]
+def open_trades(symbol=None):
+    tr = [t for t in _read(TRADES) if t.get("status") == "open"]
+    if symbol:
+        tr = [t for t in tr if t.get("symbol") == symbol]
+    return tr
 
 
-def trades_today(max_positions=2):
+def trades_today():
     now = datetime.now(timezone.utc).date()
-    closed = [t for t in _read(TRADES)
-              if t.get("status") in ("tp", "sl")
-              and t.get("closed_ts")]
-    today_closed = []
-    for t in closed:
-        try:
-            dt = datetime.fromisoformat(t["closed_ts"]).date()
-            if dt == now:
-                today_closed.append(t)
-        except Exception:
-            continue
-    return today_closed
+    out = []
+    for t in _read(TRADES):
+        if t.get("status") in ("tp", "sl") and t.get("closed_ts"):
+            try:
+                if datetime.fromisoformat(t["closed_ts"]).date() == now:
+                    out.append(t)
+            except Exception:
+                continue
+    return out
 
 
 def daily_pnl_pct():
@@ -93,32 +93,25 @@ def check_cooldown(cooldown_min=30):
     if last is None:
         return True
     try:
-        last_dt = datetime.fromisoformat(last)
-        return (datetime.now(timezone.utc) - last_dt) >= timedelta(minutes=cooldown_min)
+        return (datetime.now(timezone.utc) - datetime.fromisoformat(last)) >= timedelta(minutes=cooldown_min)
     except Exception:
         return True
 
 
-def check_and_close(candle_high, candle_low, fee_pct=0.05):
+def check_and_close(symbol, candle_high, candle_low, fee_pct=0.05):
     changed = []
     trades = _read(TRADES)
     for t in trades:
-        if t.get("status") != "open":
+        if t.get("status") != "open" or t.get("symbol") != symbol:
             continue
         if t["side"] == "BUY":
-            if candle_low <= t["sl"]:
-                exit_px, res = t["sl"], "sl"
-            elif candle_high >= t["tp"]:
-                exit_px, res = t["tp"], "tp"
-            else:
-                continue
+            if candle_low <= t["sl"]:   exit_px, res = t["sl"], "sl"
+            elif candle_high >= t["tp"]: exit_px, res = t["tp"], "tp"
+            else: continue
         else:
-            if candle_high >= t["sl"]:
-                exit_px, res = t["sl"], "sl"
-            elif candle_low <= t["tp"]:
-                exit_px, res = t["tp"], "tp"
-            else:
-                continue
+            if candle_high >= t["sl"]:  exit_px, res = t["sl"], "sl"
+            elif candle_low <= t["tp"]: exit_px, res = t["tp"], "tp"
+            else: continue
         t["status"] = res
         t["exit"] = exit_px
         pnl = ((exit_px - t["entry"]) / t["entry"] * 100
@@ -127,7 +120,6 @@ def check_and_close(candle_high, candle_low, fee_pct=0.05):
         t["pnl_pct"] = round(pnl - fee_pct, 3)
         t["closed_ts"] = _now()
         changed.append(t)
-
     if changed:
         with open(TRADES, "w", encoding="utf-8") as f:
             for r in trades:
@@ -137,14 +129,12 @@ def check_and_close(candle_high, candle_low, fee_pct=0.05):
 
 def daily_report_summary():
     closed = [t for t in _read(TRADES) if t.get("status") in ("tp", "sl")]
-    today = trades_today()
     n_all = len(closed)
     wins_all = sum(1 for t in closed if t.get("pnl_pct", 0) > 0)
-    n_today = len(today)
     return {
         "total_trades": n_all,
         "total_wins": wins_all,
         "total_wr": round(100 * wins_all / max(n_all, 1), 1),
-        "today_trades": n_today,
+        "today_trades": len(trades_today()),
         "today_pnl": round(daily_pnl_pct(), 2),
     }
