@@ -46,6 +46,6 @@ DIV_Z_THRESH = 1.0
 DIV_BOOST = 8
 
 # ── Quality-First Gates (safe subset) ────────────────────────
-VOL_CONFIRM_RATIO = 1.5
-VOL_BAND_LOW = 0.15
-VOL_BAND_HIGH = 0.85
+VOL_CONFIRM_RATIO = 1.2
+VOL_BAND_LOW = 0.10
+VOL_BAND_HIGH = 0.90
