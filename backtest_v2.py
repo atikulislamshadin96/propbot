@@ -1,6 +1,8 @@
 # ============================================================
 # backtest_v2.py — Multi-asset, non-blocked data sources
 # + Phase 1: Deribit DVOL/skew regime gate
+# + L3 Revival: Hyperliquid funding history (hl_funding_z)
+# + Patch C: MAX_RISK_PCT caps SL distance
 # + Recovery: Passes is_backtest=True to evaluate()
 # python backtest_v2.py --days 90 --with-foi
 # ============================================================
@@ -16,6 +18,18 @@ from datahub import funding_divergence_series
 from features import compute_features
 from signals_v2 import evaluate
 from deribit_skew import get_dvol_series
+from hl_funding import get_hl_funding_features
+
+
+def _f(x, default=0.0):
+    """Safe float extractor."""
+    if x is None:
+        return default
+    try:
+        v = float(x)
+        return v if v == v else default
+    except Exception:
+        return default
 
 
 def fetch_range(symbol, interval, days):
@@ -81,9 +95,29 @@ def merge_foi(df, symbol):
     return df
 
 
+def merge_hl_funding(df, coin):
+    """Merge Hyperliquid funding history + z-score onto df."""
+    df = df.copy()
+    df["time"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
+    try:
+        hl_df = get_hl_funding_features(coin, days=90)
+        if len(hl_df) > 0:
+            hl_df = hl_df.sort_values("time")
+            df = pd.merge_asof(df, hl_df, on="time", direction="backward")
+        else:
+            df["hl_funding"] = 0.0
+            df["hl_funding_z"] = 0.0
+    except Exception as e:
+        print(f"[WARN] merge_hl_funding failed for {coin}: {e}")
+        df["hl_funding"] = 0.0
+        df["hl_funding_z"] = 0.0
+    df["hl_funding"] = df.get("hl_funding", pd.Series(0.0, index=df.index)).fillna(0.0)
+    df["hl_funding_z"] = df.get("hl_funding_z", pd.Series(0.0, index=df.index)).fillna(0.0)
+    return df
+
+
 def merge_skew(df, currency):
-    """Merge Deribit DVOL + trailing percentile onto df by time (backward asof).
-    RR has no public history — left as NaN (gate simply won't fire on it)."""
+    """Merge Deribit DVOL + trailing percentile onto df by time (backward asof)."""
     df = df.copy()
     df["time"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
     try:
@@ -108,15 +142,19 @@ def run(symbols, days, with_foi):
     all_trades = []
     n_bars = 0
     for sym in symbols:
+        coin = sym.replace("USDT", "")
         df = fetch_range(sym, "15m", days)
         if with_foi:
             df = merge_foi(df, sym)
-            df = merge_skew(df, sym.replace("USDT", ""))
+            df = merge_hl_funding(df, coin)
+            df = merge_skew(df, coin)
         else:
             df["funding"] = 0.0
             df["oi_chg"] = 0.0
             df["div"] = 0.0
             df["div_z"] = 0.0
+            df["hl_funding"] = 0.0
+            df["hl_funding_z"] = 0.0
             df["dvol"] = np.nan
             df["dvol_pct"] = 0.5
             df["rr_25d"] = np.nan
@@ -152,19 +190,31 @@ def run(symbols, days, with_foi):
                          "oi_chg": row.get("oi_chg", 0.0),
                          "funding_div": row.get("div", 0.0),
                          "funding_div_z": row.get("div_z", 0.0),
+                         "hl_funding": row.get("hl_funding", 0.0),
+                         "hl_funding_z": row.get("hl_funding_z", 0.0),
                          "hour_utc": pd.Timestamp(row["ts"], unit="ms", tz="UTC").hour,
                          "dvol": row.get("dvol"),
                          "dvol_pct": row.get("dvol_pct", 0.5),
                          "rr_25d": row.get("rr_25d")}
-                
-                # 🔑 RECOVERY FIX: Pass is_backtest=True so signals_v2 uses MIN_SCORE_BACKTEST (25)
-                # and applies soft penalty for Option A instead of hard reject.
                 sig = evaluate(row, extra, is_backtest=True)
-                
                 if sig:
                     nxt = df.iloc[i + 1]
-                    open_pos = {"side": sig["side"], "entry": float(nxt["open"]),
-                                "sl": sig["sl"], "tp": sig["tp"],
+                    entry_px = float(nxt["open"])
+                    atr_val = _f(row.get("atr"))
+
+                    # 🔑 PATCH C: MAX_RISK_PCT actually caps stop distance
+                    sl_dist = max(atr_val * cfg.SL_ATR,
+                                  entry_px * cfg.MAX_RISK_PCT / 100 * 0.5)
+
+                    if sig["side"] == "SELL":
+                        sl = entry_px + sl_dist
+                        tp = entry_px - sl_dist * cfg.TP_RR
+                    else:
+                        sl = entry_px - sl_dist
+                        tp = entry_px + sl_dist * cfg.TP_RR
+
+                    open_pos = {"side": sig["side"], "entry": entry_px,
+                                "sl": sl, "tp": tp,
                                 "regime": sig["regime"], "zone": sig.get("zone", ""),
                                 "open_bar": i + 1}
         all_trades += trades
@@ -203,7 +253,7 @@ def monte_carlo(trades, sims=200):
         finals.append(eq[-1])
         peak = np.maximum.accumulate(eq)
         dd = (eq - peak) / peak
-        if dd.min() < -0.10:  # trailing drawdown
+        if dd.min() < -0.10:
             ruins += 1
     return {"mc_median_final": round(float(np.median(finals)), 3),
             "mc_ruin_prob": round(100 * ruins / sims, 1)}
