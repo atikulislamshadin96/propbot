@@ -1,7 +1,8 @@
 import os
 
 # ── Basic Settings ──────────────────────────────────────────
-SYMBOL = "BTCUSDT"
+SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+SYMBOL = SYMBOLS[0]   # backward compatibility
 INTERVAL = "15m"
 MIN_SCORE = 45
 SL_ATR = 1.5
