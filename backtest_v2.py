@@ -1,5 +1,5 @@
 # ============================================================
-# backtest_v2.py — FIXED: uses only non-blocked data sources
+# backtest_v2.py — Multi-asset, non-blocked data sources
 # python backtest_v2.py --days 60 [--with-foi]
 # ============================================================
 import argparse
@@ -16,7 +16,7 @@ from signals_v2 import evaluate
 
 
 def fetch_range(symbol, interval, days):
-    """Paginated klines — non-blocked vision endpoint (FIXED)"""
+    """Paginated klines — non-blocked vision endpoint"""
     BASE = "https://data-api.binance.vision"
     out = []
     end = int(datetime.now(timezone.utc).timestamp() * 1000)
@@ -44,7 +44,7 @@ def fetch_range(symbol, interval, days):
 
 
 def merge_foi(df, symbol):
-    """Funding/OI/divergence from non-blocked sources (FIXED)"""
+    """Funding/OI/divergence from non-blocked sources"""
     df = df.copy()
     df["time"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
     try:
@@ -78,57 +78,62 @@ def merge_foi(df, symbol):
     return df
 
 
-def run(symbol, days, with_foi):
-    df = fetch_range(symbol, "15m", days)
-    if with_foi:
-        df = merge_foi(df, symbol)
-    else:
-        df["funding"] = 0.0
-        df["oi_chg"] = 0.0
-        df["div"] = 0.0
-        df["div_z"] = 0.0
-    df = compute_features(df)
+def run(symbols, days, with_foi):
+    if isinstance(symbols, str):
+        symbols = [symbols]
+    all_trades = []
+    n_bars = 0
+    for sym in symbols:
+        df = fetch_range(sym, "15m", days)
+        if with_foi:
+            df = merge_foi(df, sym)
+        else:
+            df["funding"] = 0.0
+            df["oi_chg"] = 0.0
+            df["div"] = 0.0
+            df["div_z"] = 0.0
+        df = compute_features(df)
+        n_bars = max(n_bars, len(df))
 
-    trades, open_pos = [], None
-    fee = cfg.FEE_PCT
-    n = len(df)
+        trades, open_pos = [], None
+        fee = cfg.FEE_PCT
+        n = len(df)
+        for i in range(60, n):
+            c = df.iloc[i]
+            if open_pos:
+                o = open_pos
+                if o["side"] == "BUY":
+                    if c["low"] <= o["sl"]:   exit_px, res = o["sl"], "sl"
+                    elif c["high"] >= o["tp"]: exit_px, res = o["tp"], "tp"
+                    else: exit_px = None
+                else:
+                    if c["high"] >= o["sl"]:  exit_px, res = o["sl"], "sl"
+                    elif c["low"] <= o["tp"]: exit_px, res = o["tp"], "tp"
+                    else: exit_px = None
+                if exit_px is not None:
+                    pnl = ((exit_px - o["entry"]) / o["entry"] * 100
+                           if o["side"] == "BUY"
+                           else (o["entry"] - exit_px) / o["entry"] * 100)
+                    trades.append({**o, "symbol": sym, "exit": exit_px, "res": res,
+                                   "pnl_pct": round(pnl - fee, 3), "close_bar": i})
+                    open_pos = None
 
-    for i in range(60, n):
-        c = df.iloc[i]
-        if open_pos:
-            o = open_pos
-            if o["side"] == "BUY":
-                if c["low"] <= o["sl"]:   exit_px, res = o["sl"], "sl"
-                elif c["high"] >= o["tp"]: exit_px, res = o["tp"], "tp"
-                else: exit_px = None
-            else:
-                if c["high"] >= o["sl"]:  exit_px, res = o["sl"], "sl"
-                elif c["low"] <= o["tp"]: exit_px, res = o["tp"], "tp"
-                else: exit_px = None
-            if exit_px is not None:
-                pnl = ((exit_px - o["entry"]) / o["entry"] * 100
-                       if o["side"] == "BUY"
-                       else (o["entry"] - exit_px) / o["entry"] * 100)
-                trades.append({**o, "exit": exit_px, "res": res,
-                               "pnl_pct": round(pnl - fee, 3), "close_bar": i})
-                open_pos = None
-
-        if open_pos is None and i + 1 < n:
-            row = df.iloc[i].to_dict()
-            extra = {"funding": row.get("funding", 0.0),
-                     "oi_chg": row.get("oi_chg", 0.0),
-                     "funding_div": row.get("div", 0.0),
-                     "funding_div_z": row.get("div_z", 0.0),
-                     "hour_utc": pd.Timestamp(row["ts"], unit="ms", tz="UTC").hour}
-            sig = evaluate(row, extra)
-            if sig:
-                nxt = df.iloc[i + 1]
-                open_pos = {"side": sig["side"], "entry": float(nxt["open"]),
-                            "sl": sig["sl"], "tp": sig["tp"],
-                            "regime": sig["regime"], "zone": sig.get("zone", ""),
-                            "open_bar": i + 1}
-
-    return {"trades": trades, "n_bars": n, "df": df}
+            if open_pos is None and i + 1 < n:
+                row = df.iloc[i].to_dict()
+                extra = {"funding": row.get("funding", 0.0),
+                         "oi_chg": row.get("oi_chg", 0.0),
+                         "funding_div": row.get("div", 0.0),
+                         "funding_div_z": row.get("div_z", 0.0),
+                         "hour_utc": pd.Timestamp(row["ts"], unit="ms", tz="UTC").hour}
+                sig = evaluate(row, extra)
+                if sig:
+                    nxt = df.iloc[i + 1]
+                    open_pos = {"side": sig["side"], "entry": float(nxt["open"]),
+                                "sl": sig["sl"], "tp": sig["tp"],
+                                "regime": sig["regime"], "zone": sig.get("zone", ""),
+                                "open_bar": i + 1}
+        all_trades += trades
+    return {"trades": all_trades, "n_bars": n_bars, "df": None}
 
 
 def metrics(trades):
@@ -163,7 +168,7 @@ def monte_carlo(trades, sims=200):
         finals.append(eq[-1])
         peak = np.maximum.accumulate(eq)
         dd = (eq - peak) / peak
-        if dd.min() < -0.10:  # FIXED: trailing drawdown
+        if dd.min() < -0.10:  # trailing drawdown
             ruins += 1
     return {"mc_median_final": round(float(np.median(finals)), 3),
             "mc_ruin_prob": round(100 * ruins / sims, 1)}
@@ -184,12 +189,12 @@ if __name__ == "__main__":
     ap.add_argument("--with-foi", action="store_true")
     a = ap.parse_args()
 
-    res = run(cfg.SYMBOL, a.days, a.with_foi)
+    res = run(cfg.SYMBOLS, a.days, a.with_foi)
     m = metrics(res["trades"])
     mc = monte_carlo(res["trades"])
     co = cohort(res["trades"])
 
-    print("=== BACKTEST", cfg.SYMBOL, a.days, "days ===")
+    print("=== BACKTEST", cfg.SYMBOLS, a.days, "days ===")
     for k, v in m.items():
         print(f"  {k}: {v}")
     print("=== MONTE CARLO ===")
