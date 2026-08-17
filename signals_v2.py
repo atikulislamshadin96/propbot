@@ -208,4 +208,4 @@ def evaluate(row, extra, is_backtest=False):
         "regime": regime,
         "tags": tags,
         "zone": tags.get("zone", ""),
-    }
+        }
