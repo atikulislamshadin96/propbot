@@ -3,5 +3,6 @@
   "coin": "BTC",
   "overlapping_hourly_observations": 2160,
   "scored_observations": 2089,
-  "candidate": null
+  "candidate": null,
+  "order_execution_enabled": false
 }

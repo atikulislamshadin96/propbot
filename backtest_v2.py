@@ -279,20 +279,36 @@ def cohort(trades):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--days", type=int, default=90)
-    ap.add_argument("--with-foi", action="store_true")
+    ap.add_argument("--with-foi", action="store_true", help="required only for --strategy legacy")
+    ap.add_argument("--strategy", choices=("divergence", "legacy"), default="divergence")
+    ap.add_argument("--coin", default=cfg.FUNDING_ACTIVE_COIN)
     a = ap.parse_args()
 
-    res = run(cfg.SYMBOLS, a.days, a.with_foi)
-    m = metrics(res["trades"])
-    mc = monte_carlo(res["trades"])
-    co = cohort(res["trades"])
+    if a.strategy == "divergence":
+        from divergence_backtest import metrics as divergence_metrics
+        from divergence_backtest import monte_carlo as divergence_monte_carlo
+        from divergence_backtest import run as divergence_run
 
-    print("=== BACKTEST", cfg.SYMBOLS, a.days, "days ===")
-    for k, v in m.items():
-        print(f"  {k}: {v}")
-    print("=== MONTE CARLO ===")
-    for k, v in mc.items():
-        print(f"  {k}: {v}")
-    print("=== COHORT (by zone) ===")
-    for z, v in co.items():
-        print(f"  {z}: n={v['n']} wr={v['wr']}%")
+        result = divergence_run(a.coin, a.days)
+        print("=== FUNDING DIVERGENCE BACKTEST", a.coin, a.days, "days ===")
+        for key, value in divergence_metrics(result["events"]).items():
+            print(f"  {key}: {value}")
+        print("=== PROXY MONTE CARLO (not account-level risk) ===")
+        for key, value in divergence_monte_carlo(result["events"]).items():
+            print(f"  {key}: {value}")
+        print("  limitations: basis, execution, margin, liquidation, settlement, capacity, and venue risk are excluded")
+    else:
+        res = run(cfg.SYMBOLS, a.days, a.with_foi)
+        m = metrics(res["trades"])
+        mc = monte_carlo(res["trades"])
+        co = cohort(res["trades"])
+
+        print("=== LEGACY BACKTEST", cfg.SYMBOLS, a.days, "days ===")
+        for k, v in m.items():
+            print(f"  {k}: {v}")
+        print("=== MONTE CARLO ===")
+        for k, v in mc.items():
+            print(f"  {k}: {v}")
+        print("=== COHORT (by zone) ===")
+        for z, v in co.items():
+            print(f"  {z}: n={v['n']} wr={v['wr']}%")
