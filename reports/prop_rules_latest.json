@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-18T06:30:11.226030+00:00",
+  "timestamp": "2026-08-18T06:31:41.558984+00:00",
   "mode": "PAPER_ONLY",
   "active_program": "2step_standard",
   "decision": {
@@ -16,7 +16,7 @@
       "open_risk_pct": 0.0,
       "trades_today": 0,
       "consecutive_losses": 0,
-      "max_data_age_minutes": 15.19
+      "max_data_age_minutes": 16.69
     },
     "rules": {
       "initial_equity": 100000.0,
@@ -39,7 +39,7 @@
       "symbol": "BTCUSDT",
       "status": "FRESH",
       "completed_candle_ts": "2026-08-18T06:15:00+00:00",
-      "age_minutes": 15.19,
+      "age_minutes": 16.69,
       "bars_received": 2,
       "error": null
     },
@@ -47,7 +47,7 @@
       "symbol": "ETHUSDT",
       "status": "FRESH",
       "completed_candle_ts": "2026-08-18T06:15:00+00:00",
-      "age_minutes": 15.19,
+      "age_minutes": 16.69,
       "bars_received": 2,
       "error": null
     },
@@ -55,7 +55,7 @@
       "symbol": "SOLUSDT",
       "status": "FRESH",
       "completed_candle_ts": "2026-08-18T06:15:00+00:00",
-      "age_minutes": 15.19,
+      "age_minutes": 16.69,
       "bars_received": 2,
       "error": null
     }

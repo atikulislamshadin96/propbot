@@ -1,7 +1,9 @@
 # Generic Prop-Rule Paper Report
 
-Timestamp: `2026-08-18T06:30:11.226030+00:00`  
-Mode: **PAPER_ONLY**  
+Timestamp: `2026-08-18T06:31:41.558984+00:00`
+
+Mode: **PAPER_ONLY**
+
 Program: `2step_standard`
 
 ## Decision
@@ -24,6 +26,6 @@ Program: `2step_standard`
 | Open risk (%) | `0.0000` |
 | Trades today | `0` |
 | Consecutive losses | `0` |
-| Maximum data age (minutes) | `15.19` |
+| Maximum data age (minutes) | `16.69` |
 
 > These are generic paper-account checks. They are not a representation of a named prop firm’s current rulebook, and they cannot authorize live orders.

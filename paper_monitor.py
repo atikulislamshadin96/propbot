@@ -99,7 +99,8 @@ def render_markdown(report: dict) -> str:
     quality = report["execution_quality"]
     return f"""# Paper Monitor Report
 
-Timestamp: `{report['timestamp']}`  
+Timestamp: `{report['timestamp']}`
+
 Mode: **{report['mode']}**
 
 ## Data Health

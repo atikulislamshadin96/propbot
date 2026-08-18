@@ -1,28 +1,28 @@
 {
   "mode": "PAPER_ONLY_READ_ONLY",
-  "timestamp": "2026-08-18T06:28:12.744367+00:00",
+  "timestamp": "2026-08-18T06:31:33.738338+00:00",
   "data_health": [
     {
       "symbol": "BTCUSDT",
       "status": "FRESH",
-      "completed_candle_ts": "2026-08-18T06:00:00+00:00",
-      "age_minutes": 28.21,
+      "completed_candle_ts": "2026-08-18T06:15:00+00:00",
+      "age_minutes": 16.56,
       "bars_received": 2,
       "error": null
     },
     {
       "symbol": "ETHUSDT",
       "status": "FRESH",
-      "completed_candle_ts": "2026-08-18T06:00:00+00:00",
-      "age_minutes": 28.21,
+      "completed_candle_ts": "2026-08-18T06:15:00+00:00",
+      "age_minutes": 16.56,
       "bars_received": 2,
       "error": null
     },
     {
       "symbol": "SOLUSDT",
       "status": "FRESH",
-      "completed_candle_ts": "2026-08-18T06:00:00+00:00",
-      "age_minutes": 28.21,
+      "completed_candle_ts": "2026-08-18T06:15:00+00:00",
+      "age_minutes": 16.56,
       "bars_received": 2,
       "error": null
     }

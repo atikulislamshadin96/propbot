@@ -1,15 +1,16 @@
 # Paper Monitor Report
 
-Timestamp: `2026-08-18T06:28:12.744367+00:00`  
+Timestamp: `2026-08-18T06:31:33.738338+00:00`
+
 Mode: **PAPER_ONLY_READ_ONLY**
 
 ## Data Health
 
 | Symbol | Status | Completed-candle age (minutes) | Error |
 |---|---|---:|---|
-| BTCUSDT | FRESH | 28.21 | — |
-| ETHUSDT | FRESH | 28.21 | — |
-| SOLUSDT | FRESH | 28.21 | — |
+| BTCUSDT | FRESH | 16.56 | — |
+| ETHUSDT | FRESH | 16.56 | — |
+| SOLUSDT | FRESH | 16.56 | — |
 
 ## Paper Account Summary
 

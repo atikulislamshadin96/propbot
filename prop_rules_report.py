@@ -61,8 +61,10 @@ def run() -> dict:
     MD_PATH.write_text(
         f"""# Generic Prop-Rule Paper Report
 
-Timestamp: `{report['timestamp']}`  
-Mode: **PAPER_ONLY**  
+Timestamp: `{report['timestamp']}`
+
+Mode: **PAPER_ONLY**
+
 Program: `{cfg.ACTIVE_PROGRAM}`
 
 ## Decision
