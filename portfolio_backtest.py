@@ -16,6 +16,7 @@ import config_v2 as cfg
 from backtest_v2 import capped_stop_distance, fetch_range
 from features import compute_features
 from strategy_portfolio import mean_reversion_candidate, trend_following_candidate
+from regime_filter import classify_regime, strategy_allowed
 
 REPORT_PATH = Path("reports/portfolio_backtest_latest.json")
 MAX_HOLD_BARS = 32
@@ -56,7 +57,14 @@ def _metrics(trades: list[dict]) -> dict:
     }
 
 
-def run_strategy(symbol: str, days: int, strategy_name: str, builder: Callable[[dict], dict | None]) -> dict:
+def run_strategy(
+    symbol: str,
+    days: int,
+    strategy_name: str,
+    builder: Callable[[dict], dict | None],
+    *,
+    regime_aware: bool = False,
+) -> dict:
     frame = fetch_range(symbol, cfg.INTERVAL, days)
     if frame.empty:
         return {"symbol": symbol, "strategy": strategy_name, "bars": 0, "metrics": _metrics([]), "trades": []}
@@ -85,9 +93,15 @@ def run_strategy(symbol: str, days: int, strategy_name: str, builder: Callable[[
                 open_position = None
 
         if open_position is None:
-            candidate = builder(candle.to_dict())
+            candle_data = candle.to_dict()
+            candidate = builder(candle_data)
             if candidate is None:
                 continue
+            if regime_aware:
+                regime = classify_regime(candle_data)
+                allowed, _ = strategy_allowed(strategy_name, candidate, regime)
+                if not allowed:
+                    continue
             next_candle = frame.iloc[index + 1]
             entry = float(next_candle["open"])
             distance = capped_stop_distance(float(candidate["atr"]), entry)
@@ -112,10 +126,17 @@ def run_strategy(symbol: str, days: int, strategy_name: str, builder: Callable[[
 
     if open_position is not None:
         trades.append(_close_position(open_position, float(frame.iloc[-1]["close"]), "end_of_sample"))
-    return {"symbol": symbol, "strategy": strategy_name, "bars": int(len(frame)), "metrics": _metrics(trades), "trades": trades}
+    return {
+        "symbol": symbol,
+        "strategy": strategy_name,
+        "regime_aware": regime_aware,
+        "bars": int(len(frame)),
+        "metrics": _metrics(trades),
+        "trades": trades,
+    }
 
 
-def run(symbols: list[str] | None = None, days: int = 90) -> dict:
+def run(symbols: list[str] | None = None, days: int = 90, regime_aware: bool = False) -> dict:
     symbols = symbols or cfg.SYMBOLS
     builders = {
         "trend_following": trend_following_candidate,
@@ -124,7 +145,7 @@ def run(symbols: list[str] | None = None, days: int = 90) -> dict:
     by_strategy: dict[str, list[dict]] = {name: [] for name in builders}
     for symbol in symbols:
         for name, builder in builders.items():
-            by_strategy[name].append(run_strategy(symbol, days, name, builder))
+            by_strategy[name].append(run_strategy(symbol, days, name, builder, regime_aware=regime_aware))
 
     summary = {}
     for name, results in by_strategy.items():
@@ -137,6 +158,7 @@ def run(symbols: list[str] | None = None, days: int = 90) -> dict:
         }
     output = {
         "mode": "RESEARCH_ONLY_FORWARD_BACKTEST",
+        "regime_aware": regime_aware,
         "days": days,
         "symbols": symbols,
         "max_hold_bars": MAX_HOLD_BARS,
@@ -160,5 +182,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--days", type=int, default=90)
     parser.add_argument("--symbols", nargs="+", default=cfg.SYMBOLS)
+    parser.add_argument("--regime-aware", action="store_true")
     args = parser.parse_args()
-    run(args.symbols, args.days)
+    run(args.symbols, args.days, regime_aware=args.regime_aware)

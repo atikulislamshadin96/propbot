@@ -10,6 +10,7 @@ from typing import Any, Mapping
 
 import config_v2 as cfg
 from signals_v3 import signal_from_panel_row
+from regime_filter import filter_candidates
 
 
 def _f(value: Any, default: float = math.nan) -> float:
@@ -120,15 +121,27 @@ def evaluate_portfolio(
         if candidate is not None:
             candidates.append(candidate)
 
-    directions = {candidate["side"] for candidate in candidates if candidate.get("side") in {"BUY", "SELL"}}
+    regime_result = filter_candidates(candidates, candle_row) if candle_row is not None else {
+        "regime": {"regime": "UNKNOWN", "risk_state": "BLOCKED"},
+        "accepted": [],
+        "rejected": candidates,
+        "risk_state": "BLOCKED",
+        "action": "HOLD",
+    }
+    accepted = regime_result["accepted"]
+    directions = {candidate["side"] for candidate in accepted if candidate.get("side") in {"BUY", "SELL"}}
     conflicts = len(directions) > 1
     return {
         "mode": "PAPER_ONLY",
         "coin": coin,
         "strategies_evaluated": ["trend_following", "mean_reversion", "funding_divergence"],
-        "candidates": candidates,
-        "candidate_count": len(candidates),
+        "candidates": accepted,
+        "rejected_candidates": regime_result["rejected"],
+        "candidate_count": len(accepted),
+        "raw_candidate_count": len(candidates),
+        "regime": regime_result["regime"],
+        "risk_state": regime_result["risk_state"],
         "direction_conflict": conflicts,
-        "portfolio_action": "HOLD" if conflicts or not candidates else "REVIEW_PAPER_CANDIDATES",
+        "portfolio_action": "HOLD" if conflicts or not accepted else "REVIEW_PAPER_CANDIDATES",
         "risk_note": "Portfolio aggregation is diagnostic only; sizing, netting, execution, and live orders are intentionally absent.",
     }

@@ -1,6 +1,6 @@
 {
   "mode": "RESEARCH_ONLY_FORWARD_BACKTEST",
-  "regime_aware": true,
+  "regime_aware": false,
   "days": 90,
   "symbols": [
     "BTCUSDT",
@@ -20,45 +20,45 @@
       ],
       "bars": 25920,
       "metrics": {
-        "trades": 1482,
-        "win_rate_pct": 32.52,
-        "profit_factor": 0.7516,
-        "max_dd_pct": -70.2922,
-        "expectancy_pct": -0.07647,
-        "net_pct": -113.3255
+        "trades": 1755,
+        "win_rate_pct": 31.85,
+        "profit_factor": 0.7369,
+        "max_dd_pct": -79.0188,
+        "expectancy_pct": -0.08397,
+        "net_pct": -147.3671
       },
       "per_symbol": [
         {
           "symbol": "BTCUSDT",
           "metrics": {
-            "trades": 451,
-            "win_rate_pct": 34.37,
-            "profit_factor": 0.7943,
-            "max_dd_pct": -25.9913,
-            "expectancy_pct": -0.05183,
-            "net_pct": -23.3766
+            "trades": 527,
+            "win_rate_pct": 33.4,
+            "profit_factor": 0.7561,
+            "max_dd_pct": -33.9842,
+            "expectancy_pct": -0.06578,
+            "net_pct": -34.6645
           }
         },
         {
           "symbol": "ETHUSDT",
           "metrics": {
-            "trades": 501,
-            "win_rate_pct": 32.93,
-            "profit_factor": 0.7677,
-            "max_dd_pct": -33.7651,
-            "expectancy_pct": -0.07337,
-            "net_pct": -36.7604
+            "trades": 599,
+            "win_rate_pct": 32.05,
+            "profit_factor": 0.75,
+            "max_dd_pct": -39.3549,
+            "expectancy_pct": -0.08186,
+            "net_pct": -49.0323
           }
         },
         {
           "symbol": "SOLUSDT",
           "metrics": {
-            "trades": 530,
-            "win_rate_pct": 30.57,
-            "profit_factor": 0.7115,
-            "max_dd_pct": -43.6823,
-            "expectancy_pct": -0.10036,
-            "net_pct": -53.1885
+            "trades": 629,
+            "win_rate_pct": 30.37,
+            "profit_factor": 0.7131,
+            "max_dd_pct": -48.4716,
+            "expectancy_pct": -0.10122,
+            "net_pct": -63.6704
           }
         }
       ]
@@ -71,45 +71,45 @@
       ],
       "bars": 25920,
       "metrics": {
-        "trades": 84,
-        "win_rate_pct": 35.71,
-        "profit_factor": 0.8709,
-        "max_dd_pct": -5.6121,
-        "expectancy_pct": -0.03282,
-        "net_pct": -2.7565
+        "trades": 189,
+        "win_rate_pct": 33.33,
+        "profit_factor": 0.8274,
+        "max_dd_pct": -10.8592,
+        "expectancy_pct": -0.04657,
+        "net_pct": -8.8026
       },
       "per_symbol": [
         {
           "symbol": "BTCUSDT",
           "metrics": {
-            "trades": 38,
-            "win_rate_pct": 42.11,
-            "profit_factor": 1.1037,
-            "max_dd_pct": -3.9571,
-            "expectancy_pct": 0.0207,
-            "net_pct": 0.7865
+            "trades": 78,
+            "win_rate_pct": 33.33,
+            "profit_factor": 0.7735,
+            "max_dd_pct": -6.7895,
+            "expectancy_pct": -0.05042,
+            "net_pct": -3.933
           }
         },
         {
           "symbol": "ETHUSDT",
           "metrics": {
-            "trades": 23,
-            "win_rate_pct": 17.39,
-            "profit_factor": 0.3685,
-            "max_dd_pct": -4.5471,
-            "expectancy_pct": -0.2184,
-            "net_pct": -5.0232
+            "trades": 53,
+            "win_rate_pct": 33.96,
+            "profit_factor": 0.9876,
+            "max_dd_pct": -4.0672,
+            "expectancy_pct": -0.00355,
+            "net_pct": -0.1882
           }
         },
         {
           "symbol": "SOLUSDT",
           "metrics": {
-            "trades": 23,
-            "win_rate_pct": 43.48,
-            "profit_factor": 1.2549,
-            "max_dd_pct": -3.1024,
-            "expectancy_pct": 0.06436,
-            "net_pct": 1.4802
+            "trades": 58,
+            "win_rate_pct": 32.76,
+            "profit_factor": 0.7467,
+            "max_dd_pct": -5.7785,
+            "expectancy_pct": -0.08071,
+            "net_pct": -4.6815
           }
         }
       ]

@@ -15,6 +15,8 @@ class StrategyPortfolioTests(unittest.TestCase):
             "close": 102.0,
             "atr": 1.0,
             "vol_ratio": 1.0,
+            "rv_pct": 0.5,
+            "dvol_pct": 0.5,
         }
 
     def test_trend_following_long(self):
