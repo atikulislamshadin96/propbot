@@ -1,0 +1,559 @@
+{
+  "mode": "THRESHOLD_SENSITIVITY_RESEARCH_ONLY",
+  "coin": "BTC",
+  "panel_observations": 8757,
+  "scored_observations": 8543,
+  "lookback_days_requested": 365,
+  "strict_current_rule": {
+    "rule": "z2.5_bps37.5",
+    "economic_only": true,
+    "raw_triggers": 0,
+    "non_overlapping_entries": 0,
+    "weeks_observed": 50.863,
+    "entries_per_week": 0.0
+  },
+  "z_only_comparator": {
+    "rule": "z2.5_bps0",
+    "economic_only": false,
+    "raw_triggers": 314,
+    "non_overlapping_entries": 121,
+    "weeks_observed": 50.863,
+    "entries_per_week": 2.3789
+  },
+  "adaptive_rule": {
+    "rule": "adaptive",
+    "economic_only": false,
+    "raw_triggers": 0,
+    "non_overlapping_entries": 0,
+    "weeks_observed": 50.863,
+    "entries_per_week": 0.0
+  },
+  "adaptive_economic_cost_gated": {
+    "rule": "adaptive",
+    "economic_only": true,
+    "raw_triggers": 0,
+    "non_overlapping_entries": 0,
+    "weeks_observed": 50.863,
+    "entries_per_week": 0.0
+  },
+  "expected_gross_bps_quantiles": {
+    "0.5": 0.8693,
+    "0.75": 1.6066,
+    "0.9": 3.0488,
+    "0.95": 4.2866,
+    "0.99": 7.0964
+  },
+  "cost_sensitivity": [
+    {
+      "rule": "z1.5_bps0",
+      "economic_only": false,
+      "raw_triggers": 1184,
+      "non_overlapping_entries": 344,
+      "weeks_observed": 50.863,
+      "entries_per_week": 6.7633,
+      "z_threshold": 1.5,
+      "expected_gross_threshold_bps": 0.0
+    },
+    {
+      "rule": "z1.5_bps5",
+      "economic_only": false,
+      "raw_triggers": 245,
+      "non_overlapping_entries": 90,
+      "weeks_observed": 50.863,
+      "entries_per_week": 1.7695,
+      "z_threshold": 1.5,
+      "expected_gross_threshold_bps": 5.0
+    },
+    {
+      "rule": "z1.5_bps10",
+      "economic_only": false,
+      "raw_triggers": 22,
+      "non_overlapping_entries": 9,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.1769,
+      "z_threshold": 1.5,
+      "expected_gross_threshold_bps": 10.0
+    },
+    {
+      "rule": "z1.5_bps15",
+      "economic_only": false,
+      "raw_triggers": 3,
+      "non_overlapping_entries": 2,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0393,
+      "z_threshold": 1.5,
+      "expected_gross_threshold_bps": 15.0
+    },
+    {
+      "rule": "z1.5_bps20",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 1.5,
+      "expected_gross_threshold_bps": 20.0
+    },
+    {
+      "rule": "z1.5_bps25",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 1.5,
+      "expected_gross_threshold_bps": 25.0
+    },
+    {
+      "rule": "z1.5_bps30",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 1.5,
+      "expected_gross_threshold_bps": 30.0
+    },
+    {
+      "rule": "z1.5_bps37.5",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 1.5,
+      "expected_gross_threshold_bps": 37.5
+    },
+    {
+      "rule": "z2_bps0",
+      "economic_only": false,
+      "raw_triggers": 617,
+      "non_overlapping_entries": 223,
+      "weeks_observed": 50.863,
+      "entries_per_week": 4.3843,
+      "z_threshold": 2.0,
+      "expected_gross_threshold_bps": 0.0
+    },
+    {
+      "rule": "z2_bps5",
+      "economic_only": false,
+      "raw_triggers": 204,
+      "non_overlapping_entries": 81,
+      "weeks_observed": 50.863,
+      "entries_per_week": 1.5925,
+      "z_threshold": 2.0,
+      "expected_gross_threshold_bps": 5.0
+    },
+    {
+      "rule": "z2_bps10",
+      "economic_only": false,
+      "raw_triggers": 22,
+      "non_overlapping_entries": 9,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.1769,
+      "z_threshold": 2.0,
+      "expected_gross_threshold_bps": 10.0
+    },
+    {
+      "rule": "z2_bps15",
+      "economic_only": false,
+      "raw_triggers": 3,
+      "non_overlapping_entries": 2,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0393,
+      "z_threshold": 2.0,
+      "expected_gross_threshold_bps": 15.0
+    },
+    {
+      "rule": "z2_bps20",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.0,
+      "expected_gross_threshold_bps": 20.0
+    },
+    {
+      "rule": "z2_bps25",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.0,
+      "expected_gross_threshold_bps": 25.0
+    },
+    {
+      "rule": "z2_bps30",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.0,
+      "expected_gross_threshold_bps": 30.0
+    },
+    {
+      "rule": "z2_bps37.5",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.0,
+      "expected_gross_threshold_bps": 37.5
+    },
+    {
+      "rule": "z2.5_bps0",
+      "economic_only": false,
+      "raw_triggers": 314,
+      "non_overlapping_entries": 121,
+      "weeks_observed": 50.863,
+      "entries_per_week": 2.3789,
+      "z_threshold": 2.5,
+      "expected_gross_threshold_bps": 0.0
+    },
+    {
+      "rule": "z2.5_bps5",
+      "economic_only": false,
+      "raw_triggers": 150,
+      "non_overlapping_entries": 60,
+      "weeks_observed": 50.863,
+      "entries_per_week": 1.1796,
+      "z_threshold": 2.5,
+      "expected_gross_threshold_bps": 5.0
+    },
+    {
+      "rule": "z2.5_bps10",
+      "economic_only": false,
+      "raw_triggers": 19,
+      "non_overlapping_entries": 7,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.1376,
+      "z_threshold": 2.5,
+      "expected_gross_threshold_bps": 10.0
+    },
+    {
+      "rule": "z2.5_bps15",
+      "economic_only": false,
+      "raw_triggers": 3,
+      "non_overlapping_entries": 2,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0393,
+      "z_threshold": 2.5,
+      "expected_gross_threshold_bps": 15.0
+    },
+    {
+      "rule": "z2.5_bps20",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.5,
+      "expected_gross_threshold_bps": 20.0
+    },
+    {
+      "rule": "z2.5_bps25",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.5,
+      "expected_gross_threshold_bps": 25.0
+    },
+    {
+      "rule": "z2.5_bps30",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.5,
+      "expected_gross_threshold_bps": 30.0
+    },
+    {
+      "rule": "z2.5_bps37.5",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.5,
+      "expected_gross_threshold_bps": 37.5
+    }
+  ],
+  "threshold_grid": [
+    {
+      "rule": "z1.5_bps15",
+      "economic_only": false,
+      "raw_triggers": 3,
+      "non_overlapping_entries": 2,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0393,
+      "z_threshold": 1.5,
+      "bps_threshold": 15.0
+    },
+    {
+      "rule": "z1.5_bps20",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 1.5,
+      "bps_threshold": 20.0
+    },
+    {
+      "rule": "z1.5_bps25",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 1.5,
+      "bps_threshold": 25.0
+    },
+    {
+      "rule": "z1.5_bps30",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 1.5,
+      "bps_threshold": 30.0
+    },
+    {
+      "rule": "z1.5_bps35",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 1.5,
+      "bps_threshold": 35.0
+    },
+    {
+      "rule": "z1.75_bps15",
+      "economic_only": false,
+      "raw_triggers": 3,
+      "non_overlapping_entries": 2,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0393,
+      "z_threshold": 1.75,
+      "bps_threshold": 15.0
+    },
+    {
+      "rule": "z1.75_bps20",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 1.75,
+      "bps_threshold": 20.0
+    },
+    {
+      "rule": "z1.75_bps25",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 1.75,
+      "bps_threshold": 25.0
+    },
+    {
+      "rule": "z1.75_bps30",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 1.75,
+      "bps_threshold": 30.0
+    },
+    {
+      "rule": "z1.75_bps35",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 1.75,
+      "bps_threshold": 35.0
+    },
+    {
+      "rule": "z2_bps15",
+      "economic_only": false,
+      "raw_triggers": 3,
+      "non_overlapping_entries": 2,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0393,
+      "z_threshold": 2.0,
+      "bps_threshold": 15.0
+    },
+    {
+      "rule": "z2_bps20",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.0,
+      "bps_threshold": 20.0
+    },
+    {
+      "rule": "z2_bps25",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.0,
+      "bps_threshold": 25.0
+    },
+    {
+      "rule": "z2_bps30",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.0,
+      "bps_threshold": 30.0
+    },
+    {
+      "rule": "z2_bps35",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.0,
+      "bps_threshold": 35.0
+    },
+    {
+      "rule": "z2.25_bps15",
+      "economic_only": false,
+      "raw_triggers": 3,
+      "non_overlapping_entries": 2,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0393,
+      "z_threshold": 2.25,
+      "bps_threshold": 15.0
+    },
+    {
+      "rule": "z2.25_bps20",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.25,
+      "bps_threshold": 20.0
+    },
+    {
+      "rule": "z2.25_bps25",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.25,
+      "bps_threshold": 25.0
+    },
+    {
+      "rule": "z2.25_bps30",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.25,
+      "bps_threshold": 30.0
+    },
+    {
+      "rule": "z2.25_bps35",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.25,
+      "bps_threshold": 35.0
+    },
+    {
+      "rule": "z2.5_bps15",
+      "economic_only": false,
+      "raw_triggers": 3,
+      "non_overlapping_entries": 2,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0393,
+      "z_threshold": 2.5,
+      "bps_threshold": 15.0
+    },
+    {
+      "rule": "z2.5_bps20",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.5,
+      "bps_threshold": 20.0
+    },
+    {
+      "rule": "z2.5_bps25",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.5,
+      "bps_threshold": 25.0
+    },
+    {
+      "rule": "z2.5_bps30",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.5,
+      "bps_threshold": 30.0
+    },
+    {
+      "rule": "z2.5_bps35",
+      "economic_only": false,
+      "raw_triggers": 0,
+      "non_overlapping_entries": 0,
+      "weeks_observed": 50.863,
+      "entries_per_week": 0.0,
+      "z_threshold": 2.5,
+      "bps_threshold": 35.0
+    }
+  ],
+  "parameters": {
+    "z_range": [
+      1.5,
+      2.5
+    ],
+    "bps_range": [
+      15.0,
+      35.0
+    ],
+    "volatility_lookback_hours": 168,
+    "percentile_lookback_hours": 2160,
+    "cooldown_hours": 8,
+    "economic_cost_gate_bps": 37.5
+  },
+  "limitations": [
+    "Counts are signal-frequency diagnostics, not profitability results.",
+    "Thresholds are calculated from trailing observations only; the first warm-up period is excluded.",
+    "No orders, fills, basis PnL, margin, liquidation, capacity, or venue risk are modeled."
+  ]
+}

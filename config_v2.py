@@ -74,6 +74,13 @@ FUNDING_Z_ENTRY = 2.5
 FUNDING_EXPECTED_HOLD_HOURS = 8
 FUNDING_ROUNDTRIP_COST_BPS = 30.0
 FUNDING_COST_BUFFER = 1.25
+# Phase 1 research grid; these values are not an authorization to relax the
+# economic cost gate or to send orders.
+FUNDING_RESEARCH_Z_MIN = 1.5
+FUNDING_RESEARCH_Z_MAX = 2.5
+FUNDING_RESEARCH_BPS_MIN = 15.0
+FUNDING_RESEARCH_BPS_MAX = 35.0
+FUNDING_VOL_PERCENTILE_WINDOW_HOURS = 90 * 24
 
 # ── Quality-First Gates (safe subset) ────────────────────────
 VOL_CONFIRM_RATIO = 0.8

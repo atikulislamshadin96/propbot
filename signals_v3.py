@@ -26,6 +26,7 @@ def evaluate_divergence(
     extra: Mapping[str, Any],
     *,
     is_backtest: bool = False,
+    profile: str = "strict",
 ) -> dict[str, Any] | None:
     """Evaluate a completed cross-venue funding observation.
 
@@ -40,6 +41,8 @@ def evaluate_divergence(
     an order instruction.
     """
     del is_backtest  # The signal must not diverge between research and live paths.
+    if profile not in {"strict", "research_relaxed"}:
+        raise ValueError("profile must be strict or research_relaxed")
 
     hl_rate = _finite_float(extra.get("hl_funding"), default=math.nan)
     dydx_rate = _finite_float(extra.get("dydx_funding"), default=math.nan)
@@ -52,12 +55,21 @@ def evaluate_divergence(
         return None
     if history_hours < cfg.FUNDING_MIN_HISTORY_HOURS:
         return None
-    if abs(spread_z) < cfg.FUNDING_Z_ENTRY:
-        return None
-
     expected_hold_bps = abs(spread) * cfg.FUNDING_EXPECTED_HOLD_HOURS * 10_000
     required_cost_bps = cfg.FUNDING_ROUNDTRIP_COST_BPS * cfg.FUNDING_COST_BUFFER
-    if expected_hold_bps < required_cost_bps:
+    if profile == "strict":
+        z_threshold = cfg.FUNDING_Z_ENTRY
+        gross_threshold_bps = required_cost_bps
+        mode = "PAPER_ONLY"
+    else:
+        z_threshold = _finite_float(
+            extra.get("adaptive_z_threshold"), default=cfg.FUNDING_RESEARCH_Z_MIN
+        )
+        gross_threshold_bps = _finite_float(
+            extra.get("adaptive_bps_threshold"), default=cfg.FUNDING_RESEARCH_BPS_MIN
+        )
+        mode = "RESEARCH_ONLY_RELAXED"
+    if abs(spread_z) < z_threshold or expected_hold_bps < gross_threshold_bps:
         return None
 
     if spread > 0:
@@ -72,7 +84,7 @@ def evaluate_divergence(
     timestamp = row.get("timestamp") or row.get("time")
     timestamp_text = timestamp.isoformat() if hasattr(timestamp, "isoformat") else str(timestamp or "")
     return {
-        "mode": "PAPER_ONLY",
+        "mode": mode,
         "timestamp": timestamp_text,
         "coin": str(extra.get("coin") or cfg.FUNDING_ACTIVE_COIN).upper(),
         "side": side,
@@ -95,7 +107,12 @@ def evaluate_divergence(
     }
 
 
-def signal_from_panel_row(row: Mapping[str, Any], *, coin: str | None = None) -> dict[str, Any] | None:
+def signal_from_panel_row(
+    row: Mapping[str, Any],
+    *,
+    coin: str | None = None,
+    profile: str = "strict",
+) -> dict[str, Any] | None:
     """Build a candidate from a scored funding-panel row."""
     extra = {
         "coin": coin or cfg.FUNDING_ACTIVE_COIN,
@@ -104,5 +121,7 @@ def signal_from_panel_row(row: Mapping[str, Any], *, coin: str | None = None) ->
         "spread": row.get("spread"),
         "spread_z": row.get("spread_z"),
         "history_hours": row.get("history_hours", cfg.FUNDING_MIN_HISTORY_HOURS),
+        "adaptive_z_threshold": row.get("adaptive_z_threshold"),
+        "adaptive_bps_threshold": row.get("adaptive_bps_threshold"),
     }
-    return evaluate_divergence(row, extra)
+    return evaluate_divergence(row, extra, profile=profile)
