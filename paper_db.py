@@ -55,6 +55,14 @@ def open_trade(sig, risk_pct):
     return t["id"]
 
 
+def all_trades():
+    return _read(TRADES)
+
+
+def closed_trades():
+    return [t for t in _read(TRADES) if t.get("status") in ("tp", "sl")]
+
+
 def open_trades(symbol=None):
     tr = [t for t in _read(TRADES) if t.get("status") == "open"]
     if symbol:

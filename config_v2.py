@@ -19,6 +19,10 @@ MAX_TRADES_DAY = 3
 MAX_POSITIONS = 2
 FEE_PCT = 0.05
 MAX_RISK_PCT = 0.50   # Reduced per Genspark recommendation (was 1.5)
+MAX_PORTFOLIO_RISK_PCT = 1.00
+MAX_CONSECUTIVE_LOSSES = 3
+CIRCUIT_BREAKER_BUFFER = 0.80
+RISK_COOLDOWN_MINUTES = 30
 
 # ── Option A Soft Gate (Recovery from earlier mistake) ──────
 # Live: s_flow < 5 → hard reject (data available)

@@ -14,6 +14,7 @@ from hl_funding import get_hl_funding_features
 from funding_data import normalized_funding_series
 from funding_strategy import divergence_panel, paper_candidate
 import paper_db as db
+from risk_manager import assess_candidate
 
 INTERVAL = cfg.INTERVAL
 _HL_Z_CACHE = {}
@@ -126,21 +127,6 @@ def scan_symbol(sym):
                           f"Side: {t['side']} | PnL: {t['pnl_pct']:+.2f}%")
             print(f"[CLOSE] {sym} #{t['id']} {t['status'].upper()} pnl={t['pnl_pct']:+.2f}%")
 
-    # ── Global + per-symbol risk gates ──
-    if len(db.open_trades()) >= cfg.MAX_POSITIONS:
-        print(f"[SKIP] {sym} max total positions")
-        return
-    if len(db.open_trades(sym)) >= 1:
-        print(f"[SKIP] {sym} already open")
-        return
-    daily_pnl = db.daily_pnl_pct()
-    if daily_pnl < 0 and abs(daily_pnl) >= cfg.P["daily_loss_pct"] * 0.8:
-        print(f"[SKIP] {sym} daily circuit breaker")
-        return
-    if not db.check_cooldown(30):
-        print(f"[SKIP] {sym} cooldown")
-        return
-
     # ── Fetch Deribit skew features (cached per currency within run) ──
     skew = skew_features(coin)
     hl_funding_z = get_hyperliquid_funding_z(coin)
@@ -167,8 +153,22 @@ def scan_symbol(sym):
               f"rr_25d={rr if rr is not None else '—'}")
         return
 
-    # ── Open paper trade + log + notify ──
+    # ── Portfolio risk gate before any paper trade is opened ──
+    sig["mode"] = "PAPER_ONLY"
     sig["symbol"] = sym
+    risk_decision = assess_candidate(
+        sig,
+        open_trades=db.open_trades(),
+        closed_trades=db.closed_trades(),
+        all_trades=db.all_trades(),
+    )
+    sig["risk_decision"] = risk_decision
+    if not risk_decision["allowed"]:
+        print(f"[SKIP] {sym} risk gate: {', '.join(risk_decision['reasons'])}")
+        db.log_signal(sig)
+        return
+
+    # ── Open paper trade + log + notify ──
     db.log_signal(sig)
     tid = db.open_trade(sig, cfg.MAX_RISK_PCT)
     send_telegram(f"🎯 *NEW SIGNAL* {sig['side']} {sym}\n"
