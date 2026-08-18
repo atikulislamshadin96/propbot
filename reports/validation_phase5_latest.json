@@ -1,0 +1,968 @@
+{
+  "mode": "RESEARCH_ONLY_PHASE5_VALIDATION",
+  "days": 90,
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT"
+  ],
+  "regime_aware": true,
+  "strategies": {
+    "trend_following": {
+      "overall": {
+        "n": 1482,
+        "net_pct": -68.63479,
+        "win_rate_pct": 32.591,
+        "profit_factor": 0.75142,
+        "expectancy_pct": -0.076545,
+        "max_dd_pct": -70.32617
+      },
+      "walk_forward": {
+        "status": "OK",
+        "labels": 1482,
+        "windows": [
+          {
+            "window": 1,
+            "test_start_bar": 3456,
+            "test_end_bar": 4319,
+            "metrics": {
+              "n": 149,
+              "net_pct": -7.57796,
+              "win_rate_pct": 34.899,
+              "profit_factor": 0.85318,
+              "expectancy_pct": -0.050681,
+              "max_dd_pct": -9.00368
+            }
+          },
+          {
+            "window": 2,
+            "test_start_bar": 4320,
+            "test_end_bar": 5183,
+            "metrics": {
+              "n": 140,
+              "net_pct": -16.99041,
+              "win_rate_pct": 28.571,
+              "profit_factor": 0.62611,
+              "expectancy_pct": -0.131205,
+              "max_dd_pct": -17.91581
+            }
+          },
+          {
+            "window": 3,
+            "test_start_bar": 5184,
+            "test_end_bar": 6047,
+            "metrics": {
+              "n": 144,
+              "net_pct": -11.40828,
+              "win_rate_pct": 33.333,
+              "profit_factor": 0.73513,
+              "expectancy_pct": -0.082454,
+              "max_dd_pct": -13.40522
+            }
+          },
+          {
+            "window": 4,
+            "test_start_bar": 6048,
+            "test_end_bar": 6911,
+            "metrics": {
+              "n": 137,
+              "net_pct": -12.55539,
+              "win_rate_pct": 32.847,
+              "profit_factor": 0.65496,
+              "expectancy_pct": -0.096689,
+              "max_dd_pct": -12.90696
+            }
+          },
+          {
+            "window": 5,
+            "test_start_bar": 6912,
+            "test_end_bar": 7775,
+            "metrics": {
+              "n": 133,
+              "net_pct": -11.47933,
+              "win_rate_pct": 32.331,
+              "profit_factor": 0.65179,
+              "expectancy_pct": -0.090604,
+              "max_dd_pct": -13.49629
+            }
+          }
+        ],
+        "positive_windows": 0,
+        "median_oos_profit_factor": 0.65496
+      },
+      "cpcv": {
+        "status": "OK",
+        "labels": 1482,
+        "paths": [
+          {
+            "n": 519,
+            "net_pct": -26.90671,
+            "win_rate_pct": 33.526,
+            "profit_factor": 0.8228,
+            "expectancy_pct": -0.058361,
+            "max_dd_pct": -31.49905,
+            "test_folds": [
+              [
+                0,
+                1440
+              ],
+              [
+                1440,
+                2880
+              ]
+            ],
+            "train_n_after_purge": 957,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 468,
+            "net_pct": -11.75214,
+            "win_rate_pct": 36.325,
+            "profit_factor": 0.92049,
+            "expectancy_pct": -0.02471,
+            "max_dd_pct": -18.33425,
+            "test_folds": [
+              [
+                0,
+                1440
+              ],
+              [
+                2880,
+                4320
+              ]
+            ],
+            "train_n_after_purge": 1000,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 452,
+            "net_pct": -20.71643,
+            "win_rate_pct": 34.735,
+            "profit_factor": 0.83675,
+            "expectancy_pct": -0.049574,
+            "max_dd_pct": -26.24089,
+            "test_folds": [
+              [
+                0,
+                1440
+              ],
+              [
+                4320,
+                5760
+              ]
+            ],
+            "train_n_after_purge": 1024,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 458,
+            "net_pct": -21.05096,
+            "win_rate_pct": 34.934,
+            "profit_factor": 0.82181,
+            "expectancy_pct": -0.050072,
+            "max_dd_pct": -27.56245,
+            "test_folds": [
+              [
+                0,
+                1440
+              ],
+              [
+                5760,
+                7200
+              ]
+            ],
+            "train_n_after_purge": 1010,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 444,
+            "net_pct": -24.12797,
+            "win_rate_pct": 32.883,
+            "profit_factor": 0.76306,
+            "expectancy_pct": -0.060911,
+            "max_dd_pct": -28.56291,
+            "test_folds": [
+              [
+                0,
+                1440
+              ],
+              [
+                7200,
+                8640
+              ]
+            ],
+            "train_n_after_purge": 1035,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 555,
+            "net_pct": -35.38325,
+            "win_rate_pct": 32.432,
+            "profit_factor": 0.78361,
+            "expectancy_pct": -0.076509,
+            "max_dd_pct": -35.38325,
+            "test_folds": [
+              [
+                1440,
+                2880
+              ],
+              [
+                2880,
+                4320
+              ]
+            ],
+            "train_n_after_purge": 913,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 539,
+            "net_pct": -41.94707,
+            "win_rate_pct": 30.983,
+            "profit_factor": 0.71653,
+            "expectancy_pct": -0.098897,
+            "max_dd_pct": -42.49383,
+            "test_folds": [
+              [
+                1440,
+                2880
+              ],
+              [
+                4320,
+                5760
+              ]
+            ],
+            "train_n_after_purge": 931,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 545,
+            "net_pct": -42.19202,
+            "win_rate_pct": 31.193,
+            "profit_factor": 0.7001,
+            "expectancy_pct": -0.098773,
+            "max_dd_pct": -43.83486,
+            "test_folds": [
+              [
+                1440,
+                2880
+              ],
+              [
+                5760,
+                7200
+              ]
+            ],
+            "train_n_after_purge": 917,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 531,
+            "net_pct": -44.44507,
+            "win_rate_pct": 29.379,
+            "profit_factor": 0.64869,
+            "expectancy_pct": -0.10912,
+            "max_dd_pct": -44.44507,
+            "test_folds": [
+              [
+                1440,
+                2880
+              ],
+              [
+                7200,
+                8640
+              ]
+            ],
+            "train_n_after_purge": 942,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 488,
+            "net_pct": -29.91085,
+            "win_rate_pct": 33.402,
+            "profit_factor": 0.78726,
+            "expectancy_pct": -0.070862,
+            "max_dd_pct": -31.93317,
+            "test_folds": [
+              [
+                2880,
+                4320
+              ],
+              [
+                4320,
+                5760
+              ]
+            ],
+            "train_n_after_purge": 986,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 494,
+            "net_pct": -30.20658,
+            "win_rate_pct": 33.603,
+            "profit_factor": 0.77203,
+            "expectancy_pct": -0.071065,
+            "max_dd_pct": -33.52047,
+            "test_folds": [
+              [
+                2880,
+                4320
+              ],
+              [
+                5760,
+                7200
+              ]
+            ],
+            "train_n_after_purge": 960,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 480,
+            "net_pct": -32.92676,
+            "win_rate_pct": 31.667,
+            "profit_factor": 0.71873,
+            "expectancy_pct": -0.081703,
+            "max_dd_pct": -34.24274,
+            "test_folds": [
+              [
+                2880,
+                4320
+              ],
+              [
+                7200,
+                8640
+              ]
+            ],
+            "train_n_after_purge": 985,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 478,
+            "net_pct": -37.29626,
+            "win_rate_pct": 32.008,
+            "profit_factor": 0.68488,
+            "expectancy_pct": -0.096129,
+            "max_dd_pct": -39.52313,
+            "test_folds": [
+              [
+                4320,
+                5760
+              ],
+              [
+                5760,
+                7200
+              ]
+            ],
+            "train_n_after_purge": 990,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 464,
+            "net_pct": -39.74011,
+            "win_rate_pct": 29.957,
+            "profit_factor": 0.61859,
+            "expectancy_pct": -0.10789,
+            "max_dd_pct": -40.18018,
+            "test_folds": [
+              [
+                4320,
+                5760
+              ],
+              [
+                7200,
+                8640
+              ]
+            ],
+            "train_n_after_purge": 1009,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 470,
+            "net_pct": -39.99438,
+            "win_rate_pct": 30.213,
+            "profit_factor": 0.58772,
+            "expectancy_pct": -0.107631,
+            "max_dd_pct": -40.10309,
+            "test_folds": [
+              [
+                5760,
+                7200
+              ],
+              [
+                7200,
+                8640
+              ]
+            ],
+            "train_n_after_purge": 1009,
+            "purge_embargo_bars": 48
+          }
+        ],
+        "net_percentiles": {
+          "5": -42.86794,
+          "50": -32.92676,
+          "95": -18.02714
+        }
+      },
+      "stress": [
+        {
+          "extra_cost_bps": 0.0,
+          "metrics": {
+            "n": 1482,
+            "net_pct": -68.63479,
+            "win_rate_pct": 32.591,
+            "profit_factor": 0.75142,
+            "expectancy_pct": -0.076545,
+            "max_dd_pct": -70.32617
+          }
+        },
+        {
+          "extra_cost_bps": 5.0,
+          "metrics": {
+            "n": 1482,
+            "net_pct": -85.0618,
+            "win_rate_pct": 32.389,
+            "profit_factor": 0.62962,
+            "expectancy_pct": -0.126545,
+            "max_dd_pct": -85.42244
+          }
+        },
+        {
+          "extra_cost_bps": 10.0,
+          "metrics": {
+            "n": 1482,
+            "net_pct": -92.88808,
+            "win_rate_pct": 31.781,
+            "profit_factor": 0.52992,
+            "expectancy_pct": -0.176545,
+            "max_dd_pct": -93.02506
+          }
+        },
+        {
+          "extra_cost_bps": 20.0,
+          "metrics": {
+            "n": 1482,
+            "net_pct": -98.3898,
+            "win_rate_pct": 30.499,
+            "profit_factor": 0.37781,
+            "expectancy_pct": -0.276545,
+            "max_dd_pct": -98.40497
+          }
+        }
+      ],
+      "per_symbol": [
+        {
+          "symbol": "BTCUSDT",
+          "metrics": {
+            "n": 451,
+            "net_pct": -21.23554,
+            "win_rate_pct": 34.59,
+            "profit_factor": 0.79487,
+            "expectancy_pct": -0.051669,
+            "max_dd_pct": -25.99133
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "metrics": {
+            "n": 501,
+            "net_pct": -31.50573,
+            "win_rate_pct": 32.934,
+            "profit_factor": 0.76676,
+            "expectancy_pct": -0.073749,
+            "max_dd_pct": -33.84082
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "metrics": {
+            "n": 530,
+            "net_pct": -41.86152,
+            "win_rate_pct": 30.566,
+            "profit_factor": 0.71146,
+            "expectancy_pct": -0.100356,
+            "max_dd_pct": -43.68228
+          }
+        }
+      ]
+    },
+    "mean_reversion": {
+      "overall": {
+        "n": 84,
+        "net_pct": -2.83218,
+        "win_rate_pct": 35.714,
+        "profit_factor": 0.87088,
+        "expectancy_pct": -0.032815,
+        "max_dd_pct": -5.61208
+      },
+      "walk_forward": {
+        "status": "OK",
+        "labels": 84,
+        "windows": [
+          {
+            "window": 1,
+            "test_start_bar": 3456,
+            "test_end_bar": 4319,
+            "metrics": {
+              "n": 9,
+              "net_pct": -1.48035,
+              "win_rate_pct": 22.222,
+              "profit_factor": 0.56313,
+              "expectancy_pct": -0.163779,
+              "max_dd_pct": -1.5747
+            }
+          },
+          {
+            "window": 2,
+            "test_start_bar": 4320,
+            "test_end_bar": 5183,
+            "metrics": {
+              "n": 12,
+              "net_pct": 2.86817,
+              "win_rate_pct": 50.0,
+              "profit_factor": 2.18679,
+              "expectancy_pct": 0.238032,
+              "max_dd_pct": -1.01715
+            }
+          },
+          {
+            "window": 3,
+            "test_start_bar": 5184,
+            "test_end_bar": 6047,
+            "metrics": {
+              "n": 9,
+              "net_pct": 0.16892,
+              "win_rate_pct": 44.444,
+              "profit_factor": 1.08415,
+              "expectancy_pct": 0.020179,
+              "max_dd_pct": -1.46987
+            }
+          },
+          {
+            "window": 4,
+            "test_start_bar": 6048,
+            "test_end_bar": 6911,
+            "metrics": {
+              "n": 10,
+              "net_pct": -2.18185,
+              "win_rate_pct": 20.0,
+              "profit_factor": 0.24612,
+              "expectancy_pct": -0.21985,
+              "max_dd_pct": -2.87996
+            }
+          },
+          {
+            "window": 5,
+            "test_start_bar": 6912,
+            "test_end_bar": 7775,
+            "metrics": {
+              "n": 13,
+              "net_pct": -0.18636,
+              "win_rate_pct": 38.462,
+              "profit_factor": 0.92572,
+              "expectancy_pct": -0.013549,
+              "max_dd_pct": -2.32384
+            }
+          }
+        ],
+        "positive_windows": 2,
+        "median_oos_profit_factor": 0.92572
+      },
+      "cpcv": {
+        "status": "OK",
+        "labels": 84,
+        "paths": [
+          {
+            "n": 17,
+            "net_pct": -0.9691,
+            "win_rate_pct": 35.294,
+            "profit_factor": 0.82359,
+            "expectancy_pct": -0.055468,
+            "max_dd_pct": -3.63647,
+            "test_folds": [
+              [
+                0,
+                1440
+              ],
+              [
+                1440,
+                2880
+              ]
+            ],
+            "train_n_after_purge": 67,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 22,
+            "net_pct": -3.02445,
+            "win_rate_pct": 27.273,
+            "profit_factor": 0.59187,
+            "expectancy_pct": -0.137983,
+            "max_dd_pct": -4.01157,
+            "test_folds": [
+              [
+                0,
+                1440
+              ],
+              [
+                2880,
+                4320
+              ]
+            ],
+            "train_n_after_purge": 62,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 28,
+            "net_pct": 2.22686,
+            "win_rate_pct": 42.857,
+            "profit_factor": 1.32805,
+            "expectancy_pct": 0.080547,
+            "max_dd_pct": -2.03524,
+            "test_folds": [
+              [
+                0,
+                1440
+              ],
+              [
+                4320,
+                5760
+              ]
+            ],
+            "train_n_after_purge": 55,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 23,
+            "net_pct": -2.13475,
+            "win_rate_pct": 34.783,
+            "profit_factor": 0.66317,
+            "expectancy_pct": -0.092643,
+            "max_dd_pct": -4.19471,
+            "test_folds": [
+              [
+                0,
+                1440
+              ],
+              [
+                5760,
+                7200
+              ]
+            ],
+            "train_n_after_purge": 61,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 34,
+            "net_pct": -0.36403,
+            "win_rate_pct": 41.176,
+            "profit_factor": 0.95115,
+            "expectancy_pct": -0.009775,
+            "max_dd_pct": -3.97793,
+            "test_folds": [
+              [
+                0,
+                1440
+              ],
+              [
+                7200,
+                8640
+              ]
+            ],
+            "train_n_after_purge": 50,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 19,
+            "net_pct": -3.24513,
+            "win_rate_pct": 21.053,
+            "profit_factor": 0.53797,
+            "expectancy_pct": -0.171769,
+            "max_dd_pct": -3.24513,
+            "test_folds": [
+              [
+                1440,
+                2880
+              ],
+              [
+                2880,
+                4320
+              ]
+            ],
+            "train_n_after_purge": 65,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 25,
+            "net_pct": 1.99424,
+            "win_rate_pct": 40.0,
+            "profit_factor": 1.31187,
+            "expectancy_pct": 0.081093,
+            "max_dd_pct": -2.10296,
+            "test_folds": [
+              [
+                1440,
+                2880
+              ],
+              [
+                4320,
+                5760
+              ]
+            ],
+            "train_n_after_purge": 58,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 20,
+            "net_pct": -2.35745,
+            "win_rate_pct": 30.0,
+            "profit_factor": 0.60368,
+            "expectancy_pct": -0.117939,
+            "max_dd_pct": -3.04465,
+            "test_folds": [
+              [
+                1440,
+                2880
+              ],
+              [
+                5760,
+                7200
+              ]
+            ],
+            "train_n_after_purge": 64,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 31,
+            "net_pct": -0.59076,
+            "win_rate_pct": 38.71,
+            "profit_factor": 0.91285,
+            "expectancy_pct": -0.018076,
+            "max_dd_pct": -2.52214,
+            "test_folds": [
+              [
+                1440,
+                2880
+              ],
+              [
+                7200,
+                8640
+              ]
+            ],
+            "train_n_after_purge": 53,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 30,
+            "net_pct": -0.12262,
+            "win_rate_pct": 33.333,
+            "profit_factor": 0.9924,
+            "expectancy_pct": -0.002178,
+            "max_dd_pct": -2.36493,
+            "test_folds": [
+              [
+                2880,
+                4320
+              ],
+              [
+                4320,
+                5760
+              ]
+            ],
+            "train_n_after_purge": 53,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 25,
+            "net_pct": -4.38398,
+            "win_rate_pct": 24.0,
+            "profit_factor": 0.44664,
+            "expectancy_pct": -0.178058,
+            "max_dd_pct": -4.38398,
+            "test_folds": [
+              [
+                2880,
+                4320
+              ],
+              [
+                5760,
+                7200
+              ]
+            ],
+            "train_n_after_purge": 59,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 36,
+            "net_pct": -2.65396,
+            "win_rate_pct": 33.333,
+            "profit_factor": 0.6887,
+            "expectancy_pct": -0.073695,
+            "max_dd_pct": -4.2132,
+            "test_folds": [
+              [
+                2880,
+                4320
+              ],
+              [
+                7200,
+                8640
+              ]
+            ],
+            "train_n_after_purge": 48,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 31,
+            "net_pct": 0.79371,
+            "win_rate_pct": 38.71,
+            "profit_factor": 1.11221,
+            "expectancy_pct": 0.02708,
+            "max_dd_pct": -3.16894,
+            "test_folds": [
+              [
+                4320,
+                5760
+              ],
+              [
+                5760,
+                7200
+              ]
+            ],
+            "train_n_after_purge": 53,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 42,
+            "net_pct": 2.61742,
+            "win_rate_pct": 42.857,
+            "profit_factor": 1.33143,
+            "expectancy_pct": 0.062808,
+            "max_dd_pct": -3.32843,
+            "test_folds": [
+              [
+                4320,
+                5760
+              ],
+              [
+                7200,
+                8640
+              ]
+            ],
+            "train_n_after_purge": 41,
+            "purge_embargo_bars": 48
+          },
+          {
+            "n": 37,
+            "net_pct": -1.76086,
+            "win_rate_pct": 37.838,
+            "profit_factor": 0.76409,
+            "expectancy_pct": -0.047248,
+            "max_dd_pct": -4.54043,
+            "test_folds": [
+              [
+                5760,
+                7200
+              ],
+              [
+                7200,
+                8640
+              ]
+            ],
+            "train_n_after_purge": 47,
+            "purge_embargo_bars": 48
+          }
+        ],
+        "net_percentiles": {
+          "5": -3.58678,
+          "50": -0.9691,
+          "95": 2.34403
+        }
+      },
+      "stress": [
+        {
+          "extra_cost_bps": 0.0,
+          "metrics": {
+            "n": 84,
+            "net_pct": -2.83218,
+            "win_rate_pct": 35.714,
+            "profit_factor": 0.87088,
+            "expectancy_pct": -0.032815,
+            "max_dd_pct": -5.61208
+          }
+        },
+        {
+          "extra_cost_bps": 5.0,
+          "metrics": {
+            "n": 84,
+            "net_pct": -6.83109,
+            "win_rate_pct": 34.524,
+            "profit_factor": 0.71104,
+            "expectancy_pct": -0.082815,
+            "max_dd_pct": -8.77013
+          }
+        },
+        {
+          "extra_cost_bps": 10.0,
+          "metrics": {
+            "n": 84,
+            "net_pct": -10.6673,
+            "win_rate_pct": 33.333,
+            "profit_factor": 0.58439,
+            "expectancy_pct": -0.132815,
+            "max_dd_pct": -11.92095
+          }
+        },
+        {
+          "extra_cost_bps": 20.0,
+          "metrics": {
+            "n": 84,
+            "net_pct": -17.87755,
+            "win_rate_pct": 32.143,
+            "profit_factor": 0.39724,
+            "expectancy_pct": -0.232815,
+            "max_dd_pct": -18.48297
+          }
+        }
+      ],
+      "per_symbol": [
+        {
+          "symbol": "BTCUSDT",
+          "metrics": {
+            "n": 38,
+            "net_pct": 0.74748,
+            "win_rate_pct": 42.105,
+            "profit_factor": 1.10366,
+            "expectancy_pct": 0.020697,
+            "max_dd_pct": -3.95706
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "metrics": {
+            "n": 23,
+            "net_pct": -4.92976,
+            "win_rate_pct": 17.391,
+            "profit_factor": 0.36847,
+            "expectancy_pct": -0.218401,
+            "max_dd_pct": -4.92976
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "metrics": {
+            "n": 23,
+            "net_pct": 1.44804,
+            "win_rate_pct": 43.478,
+            "profit_factor": 1.25489,
+            "expectancy_pct": 0.064359,
+            "max_dd_pct": -3.10236
+          }
+        }
+      ]
+    }
+  },
+  "limitations": [
+    "No parameter fitting or model selection is performed inside held-out windows.",
+    "Outcome intervals must end inside the held-out window; purging and 48-bar embargo are applied to training counts.",
+    "Stress costs are additive diagnostics, not a substitute for venue-specific fill and slippage records.",
+    "Results do not establish future profitability or prop-firm challenge-passing ability."
+  ]
+}

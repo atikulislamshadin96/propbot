@@ -22,7 +22,7 @@ REPORT_PATH = Path("reports/portfolio_backtest_latest.json")
 MAX_HOLD_BARS = 32
 
 
-def _close_position(position: dict, price: float, reason: str) -> dict:
+def _close_position(position: dict, price: float, reason: str, exit_index: int | None = None) -> dict:
     if position["side"] == "BUY":
         gross = (price - position["entry"]) / position["entry"] * 100.0
     else:
@@ -33,6 +33,9 @@ def _close_position(position: dict, price: float, reason: str) -> dict:
         "exit": float(price),
         "exit_reason": reason,
         "pnl_pct": float(pnl),
+        "close_index": exit_index,
+        "open_bar": int(position.get("open_index", position.get("signal_index", 0))),
+        "close_bar": int(exit_index if exit_index is not None else position.get("open_index", 0)),
     }
 
 
@@ -89,7 +92,7 @@ def run_strategy(
             if exit_price is None and index - open_position["open_index"] >= MAX_HOLD_BARS:
                 exit_price, exit_reason = float(candle["close"]), "time_exit"
             if exit_price is not None:
-                trades.append(_close_position(open_position, exit_price, exit_reason))
+                trades.append(_close_position(open_position, exit_price, exit_reason, index))
                 open_position = None
 
         if open_position is None:
@@ -125,7 +128,7 @@ def run_strategy(
             }
 
     if open_position is not None:
-        trades.append(_close_position(open_position, float(frame.iloc[-1]["close"]), "end_of_sample"))
+        trades.append(_close_position(open_position, float(frame.iloc[-1]["close"]), "end_of_sample", len(frame) - 1))
     return {
         "symbol": symbol,
         "strategy": strategy_name,
