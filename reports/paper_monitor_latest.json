@@ -1,0 +1,51 @@
+{
+  "mode": "PAPER_ONLY_READ_ONLY",
+  "timestamp": "2026-08-18T06:28:12.744367+00:00",
+  "data_health": [
+    {
+      "symbol": "BTCUSDT",
+      "status": "FRESH",
+      "completed_candle_ts": "2026-08-18T06:00:00+00:00",
+      "age_minutes": 28.21,
+      "bars_received": 2,
+      "error": null
+    },
+    {
+      "symbol": "ETHUSDT",
+      "status": "FRESH",
+      "completed_candle_ts": "2026-08-18T06:00:00+00:00",
+      "age_minutes": 28.21,
+      "bars_received": 2,
+      "error": null
+    },
+    {
+      "symbol": "SOLUSDT",
+      "status": "FRESH",
+      "completed_candle_ts": "2026-08-18T06:00:00+00:00",
+      "age_minutes": 28.21,
+      "bars_received": 2,
+      "error": null
+    }
+  ],
+  "summary": {
+    "open_positions": 0,
+    "closed_trades": 0,
+    "daily_pnl_pct": 0,
+    "max_drawdown_pct": 0.0,
+    "consecutive_losses": 0
+  },
+  "execution_quality": {
+    "paper_trades_observed": 0,
+    "closed_trades_observed": 0,
+    "median_signal_to_paper_open_minutes": null,
+    "median_paper_holding_minutes": null,
+    "observed_exchange_slippage_bps": null,
+    "fill_quality_status": "UNOBSERVED_PAPER_PROXY_ONLY",
+    "note": "Paper entries are assumptions; no exchange fills or order-book slippage are available."
+  },
+  "limitations": [
+    "No live exchange orders or fills are observed.",
+    "Paper slippage is not a realized execution measurement.",
+    "A stale or failed public-data check should block promotion and trigger review."
+  ]
+}

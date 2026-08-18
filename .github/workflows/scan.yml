@@ -35,6 +35,9 @@ jobs:
       - name: Run funding-divergence research scan
         run: python3 funding_scan.py
 
+      - name: Run read-only paper monitor
+        run: python3 paper_monitor.py --symbols BTCUSDT ETHUSDT SOLUSDT
+
       - name: Commit results
         run: |
           git config user.name "propbot[bot]"

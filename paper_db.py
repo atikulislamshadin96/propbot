@@ -46,7 +46,7 @@ def open_trade(sig, risk_pct):
         "closed_ts": None,
         "risk_pct": risk_pct,
         **{k: sig[k] for k in ("symbol", "side", "entry", "sl", "tp", "score",
-                                "regime", "s_zone", "s_flow", "s_crowd", "s_gate")
+                                "regime", "s_zone", "s_flow", "s_crowd", "s_gate", "signal_ts")
            if k in sig}
     }
     if sig.get("zone"):

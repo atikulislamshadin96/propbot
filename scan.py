@@ -169,6 +169,7 @@ def scan_symbol(sym):
         return
 
     # ── Open paper trade + log + notify ──
+    sig["signal_ts"] = datetime.now(timezone.utc).isoformat()
     db.log_signal(sig)
     tid = db.open_trade(sig, cfg.MAX_RISK_PCT)
     send_telegram(f"🎯 *NEW SIGNAL* {sig['side']} {sym}\n"

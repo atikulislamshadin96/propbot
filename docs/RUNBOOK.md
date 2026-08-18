@@ -2,7 +2,7 @@
 
 ## Normal operation
 
-GitHub Actions runs the research scan every four hours and the validation refresh weekly. Each scan should create or update `reports/funding_scan_latest.json`, `reports/funding_scan_latest.md`, and `keepalive.txt`. A paper candidate is an alerting event only; it is not an instruction to open a position.
+GitHub Actions runs the research scan and read-only paper monitor every four hours; the validation refresh runs weekly. Each scan should create or update `reports/funding_scan_latest.json`, `reports/funding_scan_latest.md`, `reports/paper_monitor_latest.json`, `reports/paper_monitor_latest.md`, and `keepalive.txt`. A paper candidate is an alerting event only; it is not an instruction to open a position.
 
 ## Required secrets
 
@@ -14,7 +14,7 @@ Malformed data, unavailable endpoints, insufficient overlap, invalid rates, or m
 
 ## Monitoring checklist
 
-Review the latest report for observation count, scored count, current spread, z-score, candidate mode, and the explicit safety boundary. Check that the workflow completed, the heartbeat timestamp advanced, and no unexpected files were committed. For any candidate, independently review venue status, liquidity, funding schedule, basis movement, and operational feasibility; this repository does not model those risks.
+Review the latest report for observation count, scored count, current spread, z-score, candidate mode, and the explicit safety boundary. Review the paper monitor for candle freshness, open and closed paper positions, daily PnL proxy, drawdown proxy, consecutive losses, and paper holding-time metrics. Check that the workflow completed, the heartbeat timestamp advanced, and no unexpected files were committed. A stale or failed freshness check blocks promotion. The monitor reports no observed exchange slippage because there are no live fills; its execution-quality values are paper proxies only. For any candidate, independently review venue status, liquidity, funding schedule, basis movement, and operational feasibility; this repository does not model those risks.
 
 ## Promotion gate
 
