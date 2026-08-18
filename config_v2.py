@@ -50,6 +50,12 @@ ACTIVE_PROGRAM = "2step_standard"
 P = PROGRAMS[ACTIVE_PROGRAM]
 DAILY_LOSS_PCT = P["daily_loss_pct"]
 TOTAL_DD_PCT = P["total_dd_pct"]
+# Generic paper-evaluation defaults only; verify the selected firm's official
+# rulebook before using these values for any challenge assessment.
+PROP_INITIAL_EQUITY = 100_000.0
+PROP_PROFIT_TARGET_PCT = 10.0
+PROP_MAX_OPEN_RISK_PCT = MAX_PORTFOLIO_RISK_PCT
+PROP_DATA_STALE_LIMIT_MINUTES = 30.0
 # 🔑 MAX_RISK_PCT is now explicit at top level (Patch C)
 # P["max_risk_pct"] still available for program-specific override if needed
 

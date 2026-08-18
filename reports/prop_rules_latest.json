@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-08-18T06:30:11.226030+00:00",
+  "mode": "PAPER_ONLY",
+  "active_program": "2step_standard",
+  "decision": {
+    "mode": "PAPER_ONLY",
+    "status": "ACTIVE_PAPER",
+    "allowed_for_paper": true,
+    "kill_switch": false,
+    "reasons": [],
+    "target_reached": false,
+    "metrics": {
+      "equity": 100000.0,
+      "daily_loss_pct": 0.0,
+      "total_drawdown_pct": 0.0,
+      "open_risk_pct": 0.0,
+      "trades_today": 0,
+      "consecutive_losses": 0,
+      "max_data_age_minutes": 15.19
+    },
+    "rules": {
+      "initial_equity": 100000.0,
+      "daily_loss_limit_pct": 5.0,
+      "total_drawdown_limit_pct": 10.0,
+      "profit_target_pct": 10.0,
+      "max_open_risk_pct": 1.0,
+      "max_daily_trades": 3,
+      "max_consecutive_losses": 3,
+      "stale_data_limit_minutes": 30.0
+    },
+    "limitations": [
+      "Generic defaults are not a representation of any named firm\u2019s current rulebook.",
+      "This evaluator is a paper-account gate only and cannot submit or manage orders.",
+      "Equity and risk inputs must come from a verified ledger before challenge use."
+    ]
+  },
+  "data_health": [
+    {
+      "symbol": "BTCUSDT",
+      "status": "FRESH",
+      "completed_candle_ts": "2026-08-18T06:15:00+00:00",
+      "age_minutes": 15.19,
+      "bars_received": 2,
+      "error": null
+    },
+    {
+      "symbol": "ETHUSDT",
+      "status": "FRESH",
+      "completed_candle_ts": "2026-08-18T06:15:00+00:00",
+      "age_minutes": 15.19,
+      "bars_received": 2,
+      "error": null
+    },
+    {
+      "symbol": "SOLUSDT",
+      "status": "FRESH",
+      "completed_candle_ts": "2026-08-18T06:15:00+00:00",
+      "age_minutes": 15.19,
+      "bars_received": 2,
+      "error": null
+    }
+  ],
+  "ledger": {
+    "closed_trades": 0,
+    "open_trades": 0,
+    "equity_method": "initial_equity compounded by recorded paper pnl_pct"
+  }
+}
