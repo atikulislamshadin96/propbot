@@ -65,6 +65,16 @@ DIV_BOOST = 8
 # Hyperliquid funding z-score threshold (L3 Revival)
 HL_FUNDING_Z_THRESH = 2.0   # |z| >= 2.0 = crowded extreme
 
+# ── Funding-Divergence Research (paper candidates only) ───────
+FUNDING_ACTIVE_COIN = "BTC"
+FUNDING_HISTORY_DAYS = 90
+FUNDING_Z_WINDOW_HOURS = 168
+FUNDING_MIN_HISTORY_HOURS = 72
+FUNDING_Z_ENTRY = 2.5
+FUNDING_EXPECTED_HOLD_HOURS = 8
+FUNDING_ROUNDTRIP_COST_BPS = 30.0
+FUNDING_COST_BUFFER = 1.25
+
 # ── Quality-First Gates (safe subset) ────────────────────────
 VOL_CONFIRM_RATIO = 0.8
 VOL_BAND_LOW = 0.10

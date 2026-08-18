@@ -1,9 +1,8 @@
-name: signal-scan
+name: funding-research-scan
 on:
   schedule:
-    # FIX: Only run during London/NY session (08:00-16:00 UTC) for +10 session bonus
-    # This increases signal pass rate 4-9x by ensuring every scan earns the bonus
-    - cron: '0,15,30,45 8-16 * * *'
+    # Every four hours; report generation only, no exchange-order capability.
+    - cron: '15 */4 * * *'
   workflow_dispatch:    # manual fallback
 
 concurrency:
@@ -30,12 +29,8 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run scan
-        env:
-          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
-          TG_TOKEN: ${{ secrets.TG_TOKEN }}
-          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-        run: python scan.py
+      - name: Run funding-divergence research scan
+        run: python funding_scan.py
 
       - name: Commit results
         run: |

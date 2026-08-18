@@ -19,9 +19,31 @@ def make_folds(n_bars, n_splits=6, n_test=2):
 def overlaps(o, c, test):
     return any(o <= te and c >= ts for ts, te in test)
 
-def path_metrics(trades, test):
-    oos = [t for t in trades
-           if any(ts <= t["open_bar"] <= te for ts, te in test)]
+
+def trade_interval(trade):
+    """Return a trade's label interval in bar units, preserving missing close labels."""
+    open_bar = int(trade["open_bar"])
+    return open_bar, int(trade.get("close_bar", open_bar))
+
+
+def embargoed_ranges(test, n_bars, embargo):
+    """Extend each test fold forward to prevent post-test information leakage."""
+    return [(start, min(n_bars - 1, end + embargo)) for start, end in test]
+
+
+def purged_train_trades(trades, test, n_bars, embargo=EMBARGO_BARS):
+    """Exclude training labels overlapping a test fold or its forward embargo window."""
+    protected = embargoed_ranges(test, n_bars, embargo)
+    return [trade for trade in trades if not overlaps(*trade_interval(trade), protected)]
+
+
+def oos_trades(trades, test):
+    """Select labels whose decision time belongs to one of the held-out folds."""
+    return [trade for trade in trades
+            if any(start <= int(trade["open_bar"]) <= end for start, end in test)]
+
+
+def path_metrics(oos):
     if not oos:
         return None
     pnls = np.array([t["pnl_pct"] for t in oos])
@@ -31,6 +53,20 @@ def path_metrics(trades, test):
             "net_pct": round((eq - 1) * 100, 2),
             "win_rate": round(100 * len(wins) / len(pnls), 1),
             "expectancy": round(float(pnls.mean()), 3)}
+
+
+def run_purged_cpcv(trades, n_bars, n_splits=6, n_test=2, embargo=EMBARGO_BARS):
+    """Build OOS paths and record the training pool remaining after purging and embargo."""
+    paths = []
+    for test in make_folds(n_bars, n_splits, n_test):
+        train = purged_train_trades(trades, test, n_bars, embargo)
+        oos = oos_trades(trades, test)
+        metric = path_metrics(oos)
+        if metric:
+            metric["train_n"] = len(train)
+            metric["purged_n"] = len(trades) - len(train) - len(oos)
+            paths.append(metric)
+    return paths
 
 def dist(vals):
     a = np.array(vals)
@@ -51,11 +87,7 @@ def main():
         print(f"[purged] only {len(trades)} trades — insufficient")
         return
 
-    paths = []
-    for test in make_folds(n_bars, 6, 2):
-        m = path_metrics(trades, test)
-        if m:
-            paths.append(m)
+    paths = run_purged_cpcv(trades, n_bars)
 
     nets = [p["net_pct"] for p in paths]
     exps = [p["expectancy"] for p in paths]
@@ -71,6 +103,7 @@ def main():
     md = f"""# Purged CPCV Validation — {a.days} days
 Trades: {len(trades)} | N=6 folds, K=2 → {len(paths)} OOS paths
 Purge: overlapping-outcome train trades | Embargo: {EMBARGO_BARS} bars
+Mean retained training labels: {np.mean([p['train_n'] for p in paths]):.1f} | Mean purged labels: {np.mean([p['purged_n'] for p in paths]):.1f}
 
 ## OOS Path Distribution
 - Net %: P05 {dist(nets)[0]} | P50 {dist(nets)[1]} | P95 {dist(nets)[2]}

@@ -38,8 +38,9 @@ def fetch_hl_funding_history(coin, days=90):
         if age_hours < 24:
             try:
                 df = pd.read_parquet(cache_file)
-                series = pd.Series(df["fundingRate"].values,
-                                   index=pd.to_datetime(df["time"], utc=True),
+                times = pd.to_numeric(df["time"], errors="coerce")
+                series = pd.Series(df["fundingRate"].astype(float).values,
+                                   index=pd.to_datetime(times, unit="ms", utc=True),
                                    name="hl_funding")
                 print(f"[CACHE] hl_funding {coin}: {len(series)} rows (age {age_hours:.1f}h)")
                 return series
@@ -65,7 +66,7 @@ def fetch_hl_funding_history(coin, days=90):
                 if not batch or not isinstance(batch, list):
                     break
                 all_rows.extend(batch)
-                last_ts = batch[-1].get("time", cursor)
+                last_ts = int(batch[-1].get("time", cursor))
                 if last_ts <= cursor:
                     break
                 cursor = last_ts + 1
@@ -88,7 +89,7 @@ def fetch_hl_funding_history(coin, days=90):
         except Exception:
             pass  # Cache write failure is non-fatal
 
-        idx = pd.to_datetime(df["time"], unit="ms", utc=True)
+        idx = pd.to_datetime(pd.to_numeric(df["time"], errors="coerce"), unit="ms", utc=True)
         series = pd.Series(df["fundingRate"].astype(float).values,
                            index=idx, name="hl_funding")
         print(f"[INFO] hl_funding {coin}: {len(series)} rows, "

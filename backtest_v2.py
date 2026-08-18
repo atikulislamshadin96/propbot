@@ -32,6 +32,13 @@ def _f(x, default=0.0):
         return default
 
 
+def capped_stop_distance(atr_value, entry_price):
+    """Return an ATR stop distance that cannot exceed the configured risk cap."""
+    atr_distance = max(0.0, _f(atr_value) * cfg.SL_ATR)
+    cap_distance = max(0.0, _f(entry_price) * cfg.MAX_RISK_PCT / 100)
+    return min(atr_distance, cap_distance)
+
+
 def fetch_range(symbol, interval, days):
     """Paginated klines — non-blocked vision endpoint"""
     BASE = "https://data-api.binance.vision"
@@ -202,9 +209,10 @@ def run(symbols, days, with_foi):
                     entry_px = float(nxt["open"])
                     atr_val = _f(row.get("atr"))
 
-                    # 🔑 PATCH C: MAX_RISK_PCT actually caps stop distance
-                    sl_dist = max(atr_val * cfg.SL_ATR,
-                                  entry_px * cfg.MAX_RISK_PCT / 100 * 0.5)
+                    # MAX_RISK_PCT is a cap, never a lower bound on loss distance.
+                    sl_dist = capped_stop_distance(atr_val, entry_px)
+                    if sl_dist <= 0:
+                        continue
 
                     if sig["side"] == "SELL":
                         sl = entry_px + sl_dist

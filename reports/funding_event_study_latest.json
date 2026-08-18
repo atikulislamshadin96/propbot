@@ -1,0 +1,18 @@
+{
+  "mode": "COUNTERFACTUAL_FUNDING_EVENT_STUDY_ONLY",
+  "coin": "BTC",
+  "history_days_requested": 90,
+  "overlapping_hourly_observations": 2160,
+  "entry_rule": "|z| >= 2.5; expected gross funding over 8h >= 37.5 bps",
+  "summary": {
+    "events": 0,
+    "positive_proxy_rate": null,
+    "median_proxy_bps": null,
+    "mean_proxy_bps": null
+  },
+  "limitations": [
+    "This is a funding-payment proxy and excludes basis movement, mark-price divergence, execution, borrow, margin, liquidation, settlement, and venue risk.",
+    "It uses public hourly observations and does not prove tradability or capacity.",
+    "No orders are sent and the output is not an investment recommendation."
+  ]
+}

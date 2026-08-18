@@ -1,4 +1,5 @@
 import requests
+import requests
 import pandas as pd
 from datetime import datetime, timezone
 
@@ -9,9 +10,11 @@ from datahub import funding_divergence_current
 from features import compute_features
 from signals_v2 import evaluate
 from deribit_skew import skew_features
+from hl_funding import get_hl_funding_features
 import paper_db as db
 
 INTERVAL = cfg.INTERVAL
+_HL_Z_CACHE = {}
 
 
 def send_telegram(msg):
@@ -48,6 +51,20 @@ def get_hyperliquid_data(coin):
     except Exception as e:
         print(f"[WARN] hyperliquid failed for {coin}: {e}")
     return 0.0, 0.0
+
+
+def get_hyperliquid_funding_z(coin, days=7):
+    """Return the latest cached 7-day Hyperliquid funding z-score for live parity."""
+    if coin in _HL_Z_CACHE:
+        return _HL_Z_CACHE[coin]
+    try:
+        features = get_hl_funding_features(coin, days=days)
+        value = float(features["hl_funding_z"].iloc[-1]) if not features.empty else 0.0
+    except Exception as exc:
+        print(f"[WARN] {coin} Hyperliquid funding z-score unavailable: {exc}")
+        value = 0.0
+    _HL_Z_CACHE[coin] = value
+    return value
 
 
 def collect_gex():
@@ -124,11 +141,13 @@ def scan_symbol(sym):
 
     # ── Fetch Deribit skew features (cached per currency within run) ──
     skew = skew_features(coin)
+    hl_funding_z = get_hyperliquid_funding_z(coin)
 
     # ── Evaluate signal on last completed candle ──
     row = df.iloc[-2].to_dict()
     extra = {"funding": fund, "oi_chg": oi_chg, "funding_div": fdiv,
-             "funding_div_z": fdivz, "hour_utc": datetime.now(timezone.utc).hour,
+             "funding_div_z": fdivz, "hl_funding_z": hl_funding_z,
+             "hour_utc": datetime.now(timezone.utc).hour,
              "dvol": skew.get("dvol"), "dvol_pct": skew.get("dvol_pct"),
              "rr_25d": skew.get("rr_25d")}
     
@@ -141,6 +160,7 @@ def scan_symbol(sym):
         rr = skew.get("rr_25d")
         print(f"[IDLE] {sym} no signal | score < {cfg.MIN_SCORE_LIVE} | "
               f"fund={fund:+.6f} div={fdiv:+.6f} "
+              f"hl_z={hl_funding_z:+.2f} "
               f"dvol_pct={dvol_pct if dvol_pct is not None else '—'} "
               f"rr_25d={rr if rr is not None else '—'}")
         return

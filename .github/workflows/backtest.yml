@@ -29,16 +29,13 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run 90-day backtest with funding/OI data
-        run: python backtest_v2.py --days 90 --with-foi
+      - name: Run deterministic regression suite
+        run: python run_regression_tests.py
 
-      - name: Run purged validation
-        run: python purged_validation.py --days 90
-        continue-on-error: true
-
-      - name: Generate daily report
-        run: python daily_report_v2.py
-        continue-on-error: true
+      - name: Refresh public funding-divergence research report
+        run: |
+          python funding_scan.py
+          python funding_event_study.py
 
       - name: Commit results
         run: |
