@@ -19,6 +19,10 @@ MAX_TRADES_DAY = 3
 MAX_POSITIONS = 2
 FEE_PCT = 0.05
 MAX_RISK_PCT = 0.50   # Reduced per Genspark recommendation (was 1.5)
+MAX_PORTFOLIO_RISK_PCT = 1.00
+MAX_CONSECUTIVE_LOSSES = 3
+CIRCUIT_BREAKER_BUFFER = 0.80
+RISK_COOLDOWN_MINUTES = 30
 
 # ── Option A Soft Gate (Recovery from earlier mistake) ──────
 # Live: s_flow < 5 → hard reject (data available)
@@ -46,6 +50,12 @@ ACTIVE_PROGRAM = "2step_standard"
 P = PROGRAMS[ACTIVE_PROGRAM]
 DAILY_LOSS_PCT = P["daily_loss_pct"]
 TOTAL_DD_PCT = P["total_dd_pct"]
+# Generic paper-evaluation defaults only; verify the selected firm's official
+# rulebook before using these values for any challenge assessment.
+PROP_INITIAL_EQUITY = 100_000.0
+PROP_PROFIT_TARGET_PCT = 10.0
+PROP_MAX_OPEN_RISK_PCT = MAX_PORTFOLIO_RISK_PCT
+PROP_DATA_STALE_LIMIT_MINUTES = 30.0
 # 🔑 MAX_RISK_PCT is now explicit at top level (Patch C)
 # P["max_risk_pct"] still available for program-specific override if needed
 
@@ -74,6 +84,13 @@ FUNDING_Z_ENTRY = 2.5
 FUNDING_EXPECTED_HOLD_HOURS = 8
 FUNDING_ROUNDTRIP_COST_BPS = 30.0
 FUNDING_COST_BUFFER = 1.25
+# Phase 1 research grid; these values are not an authorization to relax the
+# economic cost gate or to send orders.
+FUNDING_RESEARCH_Z_MIN = 1.5
+FUNDING_RESEARCH_Z_MAX = 2.5
+FUNDING_RESEARCH_BPS_MIN = 15.0
+FUNDING_RESEARCH_BPS_MAX = 35.0
+FUNDING_VOL_PERCENTILE_WINDOW_HOURS = 90 * 24
 
 # ── Quality-First Gates (safe subset) ────────────────────────
 VOL_CONFIRM_RATIO = 0.8

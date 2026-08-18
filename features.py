@@ -33,6 +33,9 @@ def compute_features(df):
     df["ema20"] = df["close"].ewm(span=20, adjust=False).mean()
     df["ema50"] = df["close"].ewm(span=50, adjust=False).mean()
     df["adx"] = adx(df)
+    df["bb_mid"] = df["close"].rolling(20).mean()
+    df["bb_std"] = df["close"].rolling(20).std(ddof=0)
+    df["bb_z"] = (df["close"] - df["bb_mid"]) / df["bb_std"].replace(0.0, np.nan)
 
     ret = np.log(df["close"] / df["close"].shift(1))
     rv = ret.rolling(96).std()

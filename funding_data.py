@@ -23,7 +23,7 @@ def _utc(value):
     return timestamp.tz_localize("UTC") if timestamp.tzinfo is None else timestamp.tz_convert("UTC")
 
 
-def fetch_dydx_funding_history(coin: str, days: int = 14, page_size: int = 100) -> pd.Series:
+def fetch_dydx_funding_history(coin: str, days: int = 14, page_size: int = 1000) -> pd.Series:
     """Fetch dYdX hourly funding rates through the official public Indexer route."""
     if days < 1 or page_size < 1:
         raise ValueError("days and page_size must be positive")

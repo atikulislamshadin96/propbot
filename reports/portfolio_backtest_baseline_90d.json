@@ -1,0 +1,123 @@
+{
+  "mode": "RESEARCH_ONLY_FORWARD_BACKTEST",
+  "regime_aware": false,
+  "days": 90,
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT"
+  ],
+  "max_hold_bars": 32,
+  "interval": "15m",
+  "fee_pct_per_completed_trade": 0.05,
+  "stop_model": "ATR distance capped by MAX_RISK_PCT; conservative stop-first ordering when both barriers touch",
+  "strategies": {
+    "trend_following": {
+      "symbols": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "SOLUSDT"
+      ],
+      "bars": 25920,
+      "metrics": {
+        "trades": 1755,
+        "win_rate_pct": 31.85,
+        "profit_factor": 0.7369,
+        "max_dd_pct": -79.0188,
+        "expectancy_pct": -0.08397,
+        "net_pct": -147.3671
+      },
+      "per_symbol": [
+        {
+          "symbol": "BTCUSDT",
+          "metrics": {
+            "trades": 527,
+            "win_rate_pct": 33.4,
+            "profit_factor": 0.7561,
+            "max_dd_pct": -33.9842,
+            "expectancy_pct": -0.06578,
+            "net_pct": -34.6645
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "metrics": {
+            "trades": 599,
+            "win_rate_pct": 32.05,
+            "profit_factor": 0.75,
+            "max_dd_pct": -39.3549,
+            "expectancy_pct": -0.08186,
+            "net_pct": -49.0323
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "metrics": {
+            "trades": 629,
+            "win_rate_pct": 30.37,
+            "profit_factor": 0.7131,
+            "max_dd_pct": -48.4716,
+            "expectancy_pct": -0.10122,
+            "net_pct": -63.6704
+          }
+        }
+      ]
+    },
+    "mean_reversion": {
+      "symbols": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "SOLUSDT"
+      ],
+      "bars": 25920,
+      "metrics": {
+        "trades": 189,
+        "win_rate_pct": 33.33,
+        "profit_factor": 0.8274,
+        "max_dd_pct": -10.8592,
+        "expectancy_pct": -0.04657,
+        "net_pct": -8.8026
+      },
+      "per_symbol": [
+        {
+          "symbol": "BTCUSDT",
+          "metrics": {
+            "trades": 78,
+            "win_rate_pct": 33.33,
+            "profit_factor": 0.7735,
+            "max_dd_pct": -6.7895,
+            "expectancy_pct": -0.05042,
+            "net_pct": -3.933
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "metrics": {
+            "trades": 53,
+            "win_rate_pct": 33.96,
+            "profit_factor": 0.9876,
+            "max_dd_pct": -4.0672,
+            "expectancy_pct": -0.00355,
+            "net_pct": -0.1882
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "metrics": {
+            "trades": 58,
+            "win_rate_pct": 32.76,
+            "profit_factor": 0.7467,
+            "max_dd_pct": -5.7785,
+            "expectancy_pct": -0.08071,
+            "net_pct": -4.6815
+          }
+        }
+      ]
+    }
+  },
+  "limitations": [
+    "No live orders, leverage, liquidation, borrow, funding payments, or venue outages are modeled.",
+    "The metrics are historical estimates and do not establish future profitability or challenge-passing ability.",
+    "The funding-divergence strategy is not included because its paired cross-venue payoff requires a separate basis-aware simulator."
+  ]
+}

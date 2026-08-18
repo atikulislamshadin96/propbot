@@ -1,4 +1,4 @@
-import requests
+import os
 import requests
 import pandas as pd
 from datetime import datetime, timezone
@@ -11,7 +11,10 @@ from features import compute_features
 from signals_v2 import evaluate
 from deribit_skew import skew_features
 from hl_funding import get_hl_funding_features
+from funding_data import normalized_funding_series
+from funding_strategy import divergence_panel, paper_candidate
 import paper_db as db
+from risk_manager import assess_candidate
 
 INTERVAL = cfg.INTERVAL
 _HL_Z_CACHE = {}
@@ -124,21 +127,6 @@ def scan_symbol(sym):
                           f"Side: {t['side']} | PnL: {t['pnl_pct']:+.2f}%")
             print(f"[CLOSE] {sym} #{t['id']} {t['status'].upper()} pnl={t['pnl_pct']:+.2f}%")
 
-    # ── Global + per-symbol risk gates ──
-    if len(db.open_trades()) >= cfg.MAX_POSITIONS:
-        print(f"[SKIP] {sym} max total positions")
-        return
-    if len(db.open_trades(sym)) >= 1:
-        print(f"[SKIP] {sym} already open")
-        return
-    daily_pnl = db.daily_pnl_pct()
-    if daily_pnl < 0 and abs(daily_pnl) >= cfg.P["daily_loss_pct"] * 0.8:
-        print(f"[SKIP] {sym} daily circuit breaker")
-        return
-    if not db.check_cooldown(30):
-        print(f"[SKIP] {sym} cooldown")
-        return
-
     # ── Fetch Deribit skew features (cached per currency within run) ──
     skew = skew_features(coin)
     hl_funding_z = get_hyperliquid_funding_z(coin)
@@ -165,8 +153,23 @@ def scan_symbol(sym):
               f"rr_25d={rr if rr is not None else '—'}")
         return
 
-    # ── Open paper trade + log + notify ──
+    # ── Portfolio risk gate before any paper trade is opened ──
+    sig["mode"] = "PAPER_ONLY"
     sig["symbol"] = sym
+    risk_decision = assess_candidate(
+        sig,
+        open_trades=db.open_trades(),
+        closed_trades=db.closed_trades(),
+        all_trades=db.all_trades(),
+    )
+    sig["risk_decision"] = risk_decision
+    if not risk_decision["allowed"]:
+        print(f"[SKIP] {sym} risk gate: {', '.join(risk_decision['reasons'])}")
+        db.log_signal(sig)
+        return
+
+    # ── Open paper trade + log + notify ──
+    sig["signal_ts"] = datetime.now(timezone.utc).isoformat()
     db.log_signal(sig)
     tid = db.open_trade(sig, cfg.MAX_RISK_PCT)
     send_telegram(f"🎯 *NEW SIGNAL* {sig['side']} {sym}\n"
@@ -176,13 +179,52 @@ def scan_symbol(sym):
           f"score={sig['score']} zone={sig.get('zone', '—')}")
 
 
-def main():
-    print(f"[{datetime.now(timezone.utc).isoformat()}] scan start | "
-          f"{cfg.SYMBOLS} | program={cfg.ACTIVE_PROGRAM}")
+def run_divergence_scan():
+    """Run the default read-only cross-venue funding scan."""
+    coin = cfg.FUNDING_ACTIVE_COIN
+    print(f"[{datetime.now(timezone.utc).isoformat()}] divergence scan start | {coin}")
     heartbeat()
-    collect_gex()
-    for sym in cfg.SYMBOLS:
-        scan_symbol(sym)
+    try:
+        panel = normalized_funding_series(coin, cfg.FUNDING_HISTORY_DAYS)
+        scored = divergence_panel(panel)
+        candidate = paper_candidate(panel)
+    except Exception as exc:
+        print(f"[ERROR] divergence scan failed closed: {exc}")
+        return {"mode": "PAPER_ONLY", "coin": coin, "candidate": None, "error": str(exc)}
+
+    if candidate:
+        send_telegram(
+            f"PAPER-ONLY funding candidate {candidate['side']} {coin}\n"
+            f"z={candidate['spread_z']:.2f} | expected net before basis risk="
+            f"{candidate['expected_net_bps_before_basis_risk']:.1f} bps\n"
+            "No order was sent."
+        )
+        print(f"[CANDIDATE] {candidate['side']} {coin} z={candidate['spread_z']:.2f}")
+    else:
+        latest = scored.iloc[-1] if not scored.empty else None
+        z_text = f"{float(latest['spread_z']):+.2f}" if latest is not None else "n/a"
+        print(f"[IDLE] {coin} no cost-gated divergence candidate | z={z_text}")
+    return {
+        "mode": "PAPER_ONLY",
+        "coin": coin,
+        "overlapping_hourly_observations": int(len(panel)),
+        "scored_observations": int(len(scored)),
+        "candidate": candidate,
+    }
+
+
+def main():
+    # The old single-leg sweep scanner remains available only for regression
+    # comparison. Production workflows use the read-only divergence path.
+    if os.getenv("LEGACY_SCAN", "0") == "1":
+        print(f"[{datetime.now(timezone.utc).isoformat()}] legacy scan start | "
+              f"{cfg.SYMBOLS} | program={cfg.ACTIVE_PROGRAM}")
+        heartbeat()
+        collect_gex()
+        for sym in cfg.SYMBOLS:
+            scan_symbol(sym)
+        return
+    run_divergence_scan()
 
 
 if __name__ == "__main__":

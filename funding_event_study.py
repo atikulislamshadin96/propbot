@@ -1,4 +1,6 @@
-"""Historical funding-divergence event study; a counterfactual funding proxy, not a trading backtest."""
+"""Historical funding-divergence event study; a funding proxy, not a trading backtest."""
+from __future__ import annotations
+
 import json
 from pathlib import Path
 
@@ -7,38 +9,39 @@ import pandas as pd
 import config_v2 as cfg
 from funding_data import normalized_funding_series
 from funding_strategy import divergence_panel
+from signals_v3 import signal_from_panel_row
 
 
 REPORT_DIR = Path("reports")
 
 
 def run_event_study(panel: pd.DataFrame) -> pd.DataFrame:
-    """Evaluate non-overlapping, cost-gated divergence events using subsequently observed funding rates only."""
+    """Evaluate non-overlapping events using only subsequently observed funding."""
     scored = divergence_panel(panel)
     records = []
     next_eligible = None
     for timestamp, row in scored.iterrows():
         if next_eligible is not None and timestamp < next_eligible:
             continue
-        spread = float(row["spread"])
-        expected_bps = abs(spread) * cfg.FUNDING_EXPECTED_HOLD_HOURS * 10_000
-        cost_bps = cfg.FUNDING_ROUNDTRIP_COST_BPS * cfg.FUNDING_COST_BUFFER
-        if abs(float(row["spread_z"])) < cfg.FUNDING_Z_ENTRY or expected_bps < cost_bps:
+        candidate = signal_from_panel_row({**row.to_dict(), "timestamp": timestamp}, coin=cfg.FUNDING_ACTIVE_COIN)
+        if candidate is None:
             continue
         future = panel.loc[panel.index > timestamp, "hl_funding"] - panel.loc[panel.index > timestamp, "dydx_funding"]
         future = future.iloc[: cfg.FUNDING_EXPECTED_HOLD_HOURS]
         if len(future) < cfg.FUNDING_EXPECTED_HOLD_HOURS:
             continue
-        realized_gross_bps = (1 if spread > 0 else -1) * float(future.sum()) * 10_000
+        direction = 1.0 if candidate["side"] == "SHORT_HL_LONG_DYDX" else -1.0
+        realized_gross_bps = direction * float(future.sum()) * 10_000
         records.append(
             {
                 "entry_time": timestamp,
-                "entry_spread": spread,
+                "entry_spread": float(row["spread"]),
                 "entry_z": float(row["spread_z"]),
-                "expected_gross_bps": expected_bps,
-                "fixed_cost_bps": cost_bps,
-                "realized_funding_proxy_bps": realized_gross_bps - cost_bps,
+                "expected_gross_bps": float(candidate["expected_gross_bps"]),
+                "fixed_cost_bps": float(candidate["required_cost_bps"]),
+                "realized_funding_proxy_bps": realized_gross_bps - float(candidate["required_cost_bps"]),
                 "funding_hours_observed": len(future),
+                "side": candidate["side"],
             }
         )
         next_eligible = timestamp + pd.Timedelta(hours=cfg.FUNDING_EXPECTED_HOLD_HOURS)
@@ -46,6 +49,7 @@ def run_event_study(panel: pd.DataFrame) -> pd.DataFrame:
 
 
 def summarize(events: pd.DataFrame) -> dict:
+    """Summarize event-study proxy returns without treating them as account PnL."""
     if events.empty:
         return {"events": 0, "positive_proxy_rate": None, "median_proxy_bps": None, "mean_proxy_bps": None}
     proxy = events["realized_funding_proxy_bps"]
@@ -59,6 +63,7 @@ def summarize(events: pd.DataFrame) -> dict:
 
 
 def main():
+    """Write a counterfactual event-study report from public funding data."""
     REPORT_DIR.mkdir(exist_ok=True)
     panel = normalized_funding_series(cfg.FUNDING_ACTIVE_COIN, cfg.FUNDING_HISTORY_DAYS)
     events = run_event_study(panel)
@@ -75,7 +80,7 @@ def main():
             "No orders are sent and the output is not an investment recommendation.",
         ],
     }
-    (REPORT_DIR / "funding_event_study_latest.json").write_text(json.dumps(summary, indent=2) + "\n")
+    (REPORT_DIR / "funding_event_study_latest.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     events.to_csv(REPORT_DIR / "funding_event_study_events.csv", index=False)
     print(json.dumps(summary, indent=2))
 

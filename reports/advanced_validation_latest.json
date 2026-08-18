@@ -1,0 +1,298 @@
+{
+  "strategy": "aggressive_flow_liquidity_shock",
+  "generated_at": "2026-08-18T07:49:56.667862+00:00",
+  "data_source": "Binance Vision spot klines; taker-buy volume proxy",
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT"
+  ],
+  "interval": "15m",
+  "days_requested": 90,
+  "common_bars": 8640,
+  "full_sample": {
+    "5": {
+      "trades": 136,
+      "win_rate": 0.367647,
+      "profit_factor": 0.68617,
+      "expectancy": -0.00088924,
+      "net_return": -0.115535,
+      "max_drawdown": -0.119751,
+      "avg_win": 0.00528842,
+      "avg_loss": -0.0044809
+    },
+    "10": {
+      "trades": 136,
+      "win_rate": 0.345588,
+      "profit_factor": 0.456627,
+      "expectancy": -0.00188924,
+      "net_return": -0.22815,
+      "max_drawdown": -0.230292,
+      "avg_win": 0.00459401,
+      "avg_loss": -0.00531298
+    },
+    "15": {
+      "trades": 136,
+      "win_rate": 0.330882,
+      "profit_factor": 0.301045,
+      "expectancy": -0.00288924,
+      "net_return": -0.326518,
+      "max_drawdown": -0.327717,
+      "avg_win": 0.00376091,
+      "avg_loss": -0.00617778
+    }
+  },
+  "walk_forward": [
+    {
+      "window": 1,
+      "start_ts": 1781208000000,
+      "end_ts": 1783152000000,
+      "metrics": {
+        "trades": 37,
+        "win_rate": 0.378378,
+        "profit_factor": 0.788705,
+        "expectancy": -0.00057417,
+        "net_return": -0.021525,
+        "max_drawdown": -0.039895,
+        "avg_win": 0.00566421,
+        "avg_loss": -0.00437144
+      }
+    },
+    {
+      "window": 2,
+      "start_ts": 1783152000000,
+      "end_ts": 1785096000000,
+      "metrics": {
+        "trades": 36,
+        "win_rate": 0.444444,
+        "profit_factor": 0.90421,
+        "expectancy": -0.00022126,
+        "net_return": -0.00833,
+        "max_drawdown": -0.023527,
+        "avg_win": 0.00469927,
+        "avg_loss": -0.00415768
+      }
+    },
+    {
+      "window": 3,
+      "start_ts": 1785096000000,
+      "end_ts": 1787039100001,
+      "metrics": {
+        "trades": 28,
+        "win_rate": 0.357143,
+        "profit_factor": 0.694303,
+        "expectancy": -0.0007181,
+        "net_return": -0.020161,
+        "max_drawdown": -0.043046,
+        "avg_win": 0.0045667,
+        "avg_loss": -0.00365411
+      }
+    }
+  ],
+  "purged_cpcv": {
+    "status": "ok",
+    "folds": 5,
+    "combinations": 10,
+    "profit_factor_p10": 0.475802,
+    "profit_factor_p50": 0.738547,
+    "profit_factor_p90": 0.878065,
+    "net_return_p10": -0.085067,
+    "net_return_p50": -0.038579,
+    "net_return_p90": -0.019166,
+    "combination_results": [
+      {
+        "test_folds": [
+          0,
+          1
+        ],
+        "metrics": {
+          "trades": 54,
+          "win_rate": 0.296296,
+          "profit_factor": 0.534614,
+          "expectancy": -0.00160426,
+          "net_return": -0.083794,
+          "max_drawdown": -0.087125,
+          "avg_win": 0.00621979,
+          "avg_loss": -0.0048986
+        },
+        "purge_bars": 16,
+        "tested_trades": 54
+      },
+      {
+        "test_folds": [
+          0,
+          2
+        ],
+        "metrics": {
+          "trades": 54,
+          "win_rate": 0.351852,
+          "profit_factor": 0.600456,
+          "expectancy": -0.00126146,
+          "net_return": -0.066593,
+          "max_drawdown": -0.087333,
+          "avg_win": 0.00538803,
+          "avg_loss": -0.00487118
+        },
+        "purge_bars": 16,
+        "tested_trades": 54
+      },
+      {
+        "test_folds": [
+          0,
+          3
+        ],
+        "metrics": {
+          "trades": 54,
+          "win_rate": 0.314815,
+          "profit_factor": 0.510023,
+          "expectancy": -0.00152512,
+          "net_return": -0.079697,
+          "max_drawdown": -0.086515,
+          "avg_win": 0.0050427,
+          "avg_loss": -0.00454277
+        },
+        "purge_bars": 16,
+        "tested_trades": 54
+      },
+      {
+        "test_folds": [
+          0,
+          4
+        ],
+        "metrics": {
+          "trades": 55,
+          "win_rate": 0.290909,
+          "profit_factor": 0.475802,
+          "expectancy": -0.00160445,
+          "net_return": -0.085067,
+          "max_drawdown": -0.089428,
+          "avg_win": 0.0050061,
+          "avg_loss": -0.00431646
+        },
+        "purge_bars": 16,
+        "tested_trades": 55
+      },
+      {
+        "test_folds": [
+          1,
+          2
+        ],
+        "metrics": {
+          "trades": 54,
+          "win_rate": 0.425926,
+          "profit_factor": 0.878065,
+          "expectancy": -0.0003421,
+          "net_return": -0.019166,
+          "max_drawdown": -0.042312,
+          "avg_win": 0.00578383,
+          "avg_loss": -0.00488714
+        },
+        "purge_bars": 16,
+        "tested_trades": 54
+      },
+      {
+        "test_folds": [
+          1,
+          3
+        ],
+        "metrics": {
+          "trades": 54,
+          "win_rate": 0.388889,
+          "profit_factor": 0.780598,
+          "expectancy": -0.00060576,
+          "net_return": -0.032936,
+          "max_drawdown": -0.041454,
+          "avg_win": 0.00554198,
+          "avg_loss": -0.00451796
+        },
+        "purge_bars": 16,
+        "tested_trades": 54
+      },
+      {
+        "test_folds": [
+          1,
+          4
+        ],
+        "metrics": {
+          "trades": 55,
+          "win_rate": 0.363636,
+          "profit_factor": 0.741556,
+          "expectancy": -0.0007018,
+          "net_return": -0.038579,
+          "max_drawdown": -0.044511,
+          "avg_win": 0.00553765,
+          "avg_loss": -0.00426721
+        },
+        "purge_bars": 16,
+        "tested_trades": 55
+      },
+      {
+        "test_folds": [
+          2,
+          3
+        ],
+        "metrics": {
+          "trades": 54,
+          "win_rate": 0.444444,
+          "profit_factor": 0.893584,
+          "expectancy": -0.00026296,
+          "net_return": -0.014781,
+          "max_drawdown": -0.023527,
+          "avg_win": 0.00496822,
+          "avg_loss": -0.00444791
+        },
+        "purge_bars": 16,
+        "tested_trades": 54
+      },
+      {
+        "test_folds": [
+          2,
+          4
+        ],
+        "metrics": {
+          "trades": 55,
+          "win_rate": 0.418182,
+          "profit_factor": 0.84975,
+          "expectancy": -0.00036523,
+          "net_return": -0.02053,
+          "max_drawdown": -0.043046,
+          "avg_win": 0.00493952,
+          "avg_loss": -0.00417803
+        },
+        "purge_bars": 16,
+        "tested_trades": 55
+      },
+      {
+        "test_folds": [
+          3,
+          4
+        ],
+        "metrics": {
+          "trades": 55,
+          "win_rate": 0.381818,
+          "profit_factor": 0.738547,
+          "expectancy": -0.0006241,
+          "net_return": -0.034281,
+          "max_drawdown": -0.043046,
+          "avg_win": 0.00461726,
+          "avg_loss": -0.00386142
+        },
+        "purge_bars": 16,
+        "tested_trades": 55
+      }
+    ]
+  },
+  "gates": {
+    "min_trades": true,
+    "min_win_rate": false,
+    "min_profit_factor": false,
+    "positive_expectancy": false,
+    "max_drawdown_buffer": false,
+    "stress_5bps_pf": false,
+    "stress_10bps_pf": false,
+    "walk_forward_stability": false,
+    "cpcv_median_positive": false
+  },
+  "validation_pass": false,
+  "deployment_policy": "paper_and_telegram_allowed_only_if_validation_pass_true"
+}

@@ -1,0 +1,79 @@
+{
+  "mode": "RESEARCH_ONLY_FREQUENCY",
+  "days": 90,
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT"
+  ],
+  "results": [
+    {
+      "symbol": "BTCUSDT",
+      "bars": 8640,
+      "usable_signal_bars": 264,
+      "overlap_bars": 0,
+      "cooldown_bars": 32,
+      "strategies": {
+        "trend_following": {
+          "signals": 196,
+          "signals_per_week": 15.2444
+        },
+        "mean_reversion": {
+          "signals": 68,
+          "signals_per_week": 5.2889
+        }
+      }
+    },
+    {
+      "symbol": "ETHUSDT",
+      "bars": 8640,
+      "usable_signal_bars": 242,
+      "overlap_bars": 0,
+      "cooldown_bars": 32,
+      "strategies": {
+        "trend_following": {
+          "signals": 197,
+          "signals_per_week": 15.3222
+        },
+        "mean_reversion": {
+          "signals": 45,
+          "signals_per_week": 3.5
+        }
+      }
+    },
+    {
+      "symbol": "SOLUSDT",
+      "bars": 8640,
+      "usable_signal_bars": 255,
+      "overlap_bars": 0,
+      "cooldown_bars": 32,
+      "strategies": {
+        "trend_following": {
+          "signals": 204,
+          "signals_per_week": 15.8667
+        },
+        "mean_reversion": {
+          "signals": 51,
+          "signals_per_week": 3.9667
+        }
+      }
+    }
+  ],
+  "portfolio": {
+    "bars": 25920,
+    "overlap_bars": 0,
+    "strategy_signals": {
+      "trend_following": 597,
+      "mean_reversion": 164
+    },
+    "signals_per_week": {
+      "trend_following": 46.4333,
+      "mean_reversion": 12.7556
+    }
+  },
+  "limitations": [
+    "Frequency and overlap only; no PnL, fills, slippage, or risk-adjusted returns are estimated.",
+    "Strategies are counted independently; portfolio netting and capital allocation are not modeled.",
+    "The funding-divergence component is validated separately because it uses hourly cross-venue data."
+  ]
+}

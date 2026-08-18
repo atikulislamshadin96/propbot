@@ -1,0 +1,44 @@
+name: phase1-threshold-validation
+
+on:
+  schedule:
+    - cron: '15 20 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: phase1-threshold-validation
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run regression suite
+        run: python3 run_regression_tests.py
+
+      - name: Run threshold-frequency validation
+        run: python3 threshold_validation.py --days 365 --coin BTC
+
+      - name: Commit daily report
+        run: |
+          git config user.name "propbot[bot]"
+          git config user.email "propbot@users.noreply.github.com"
+          git add reports/threshold_validation_latest.json reports/threshold_validation_latest.md
+          git diff --cached --quiet || git commit -m "daily threshold validation $(date -u +%F)"
+          git push || echo "push failed (non-fatal)"
