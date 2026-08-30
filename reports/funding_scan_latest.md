@@ -3,7 +3,7 @@
 Mode: **research and paper candidates only; no orders are sent.**
 
 Coin: `BTC` | overlapping hourly observations: `2160` | scored: `2089`
-Latest spread: `0.00000093` | z-score: `-0.41`
+Latest spread: `0.00001250` | z-score: `-0.08`
 
 ## Outcome
 ```json
